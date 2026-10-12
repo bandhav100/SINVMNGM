@@ -139,6 +139,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/suppliers", "/api/v1/suppliers/**").hasAnyRole("ADMIN", "PURCHASE_MANAGER")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/suppliers", "/api/v1/suppliers/**").hasAnyRole("ADMIN", "PURCHASE_MANAGER")
 
+                        // Purchase Management RBAC
+                        .requestMatchers(HttpMethod.POST, "/api/v1/purchases/*/receive").hasAnyRole("ADMIN", "PURCHASE_MANAGER", "INVENTORY_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/purchases", "/api/v1/purchases/**").hasAnyRole("ADMIN", "PURCHASE_MANAGER", "INVENTORY_MANAGER")
+                        .requestMatchers("/api/v1/purchases", "/api/v1/purchases/**").hasAnyRole("ADMIN", "PURCHASE_MANAGER")
+
                         // All other authenticated endpoints (including /api/v1/auth/me and /api/v1/auth/logout)
                         .anyRequest().authenticated()
                 )

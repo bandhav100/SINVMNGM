@@ -8,6 +8,7 @@ import SetupAdminPage from './pages/auth/SetupAdminPage';
 import ProductsPage from './pages/products/ProductsPage';
 import SuppliersPage from './pages/suppliers/SuppliersPage';
 import UsersPage from './pages/users/UsersPage';
+import PurchasesPage from './pages/purchases/PurchasesPage';
 import ModulePlaceholderPage from './pages/common/ModulePlaceholderPage';
 import {
   LayoutDashboard,
@@ -114,19 +115,8 @@ export default function App() {
             <Route
               path="purchases"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'PURCHASE_MANAGER']}>
-                  <ModulePlaceholderPage
-                    title="Purchase Orders"
-                    icon={ShoppingCart}
-                    phase="Phase 6"
-                    description="Full purchasing lifecycle: Order creation, supplier selection, approval workflows, and automated stock receipt."
-                    features={[
-                      'Draft purchase order creation with line items',
-                      'Multi-stage approval workflow (Draft → Pending → Approved)',
-                      'Receive shipments and automatically increment stock',
-                      'Prevent duplicate receipts and track purchase costs'
-                    ]}
-                  />
+                <ProtectedRoute allowedRoles={['ADMIN', 'PURCHASE_MANAGER', 'INVENTORY_MANAGER']}>
+                  <PurchasesPage />
                 </ProtectedRoute>
               }
             />

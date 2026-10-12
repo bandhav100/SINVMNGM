@@ -120,6 +120,10 @@ public class Supplier {
         return active;
     }
 
+    public boolean isActive() {
+        return Boolean.TRUE.equals(this.active);
+    }
+
     public void setActive(Boolean active) {
         this.active = active;
     }

@@ -24,6 +24,22 @@ public record PageResponseDto<T>(
         );
     }
 
+    public static <T, R> PageResponseDto<R> fromPage(Page<T> page, java.util.function.Function<T, R> mapper) {
+        return new PageResponseDto<>(
+            page.getContent().stream().map(mapper).toList(),
+            page.getNumber(),
+            page.getSize(),
+            page.getTotalElements(),
+            page.getTotalPages(),
+            page.isFirst(),
+            page.isLast()
+        );
+    }
+
+    public static <T> PageResponseDto<T> of(List<T> content, int pageNumber, int pageSize, long totalElements, int totalPages, boolean isFirst, boolean isLast) {
+        return new PageResponseDto<>(content, pageNumber, pageSize, totalElements, totalPages, isFirst, isLast);
+    }
+
     public static <T> PageResponseDto<T> from(Page<T> page) {
         return fromPage(page);
     }

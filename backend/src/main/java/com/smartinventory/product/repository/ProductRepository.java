@@ -25,4 +25,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> searchProducts(@Param("search") String search, Pageable pageable);
 
     long countByCategoryId(Long categoryId);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Product p WHERE p.id IN :ids ORDER BY p.id ASC")
+    java.util.List<Product> findAllByIdInOrderByIdAscForUpdate(@Param("ids") java.util.List<Long> ids);
 }

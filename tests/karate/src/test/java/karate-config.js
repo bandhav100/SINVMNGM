@@ -7,7 +7,8 @@ function fn() {
         usersUrl: baseUrl + '/api/v1/users',
         productsUrl: baseUrl + '/api/v1/products',
         categoriesUrl: baseUrl + '/api/v1/categories',
-        suppliersUrl: baseUrl + '/api/v1/suppliers'
+        suppliersUrl: baseUrl + '/api/v1/suppliers',
+        purchasesUrl: baseUrl + '/api/v1/purchases'
     };
     karate.configure('connectTimeout', 10000);
     karate.configure('readTimeout', 10000);

@@ -69,7 +69,7 @@ Feature: User Management and Role-Based Access Control API Tests
     * def staffUsername = 'sales_' + uid
     # 1. Admin creates a sales staff user
     Given path '/api/v1/users'
-    And request { username: staffUsername, email: '#(staffUsername + "@sims.local")', fullName: "Sales Guy", password: "Password@123", role: "SALES_STAFF" }
+    And request { username: '#(staffUsername)', email: '#(staffUsername + "@sims.local")', fullName: "Sales Guy", password: "Password@123", role: "SALES_STAFF" }
     When method post
     Then status 201
 
