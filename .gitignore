@@ -83,3 +83,13 @@ logs/
 
 # Docker
 docker-compose.override.yml
+
+# Database Dumps
+*.dump
+*.sql.gz
+dump.rdb
+
+# AI & Assistant metadata
+.gemini/
+.agents/
+
