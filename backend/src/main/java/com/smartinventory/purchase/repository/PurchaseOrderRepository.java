@@ -42,4 +42,47 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             @Param("endDate") LocalDate endDate,
             Pageable pageable
     );
+
+    @Query("SELECT po.status, COUNT(po) FROM PurchaseOrder po " +
+           "WHERE po.createdAt >= :startInstant AND po.createdAt <= :endInstant " +
+           "GROUP BY po.status")
+    java.util.List<Object[]> countOrdersByStatusInRange(
+            @Param("startInstant") java.time.Instant startInstant,
+            @Param("endInstant") java.time.Instant endInstant
+    );
+
+    @Query("SELECT po.supplier.id, po.supplier.name, COUNT(po), " +
+           "SUM(CASE WHEN po.status = com.smartinventory.purchase.model.PurchaseOrderStatus.RECEIVED THEN 1 ELSE 0 END), " +
+           "COALESCE(SUM(CASE WHEN po.status = com.smartinventory.purchase.model.PurchaseOrderStatus.RECEIVED THEN po.totalAmount ELSE 0 END), 0) " +
+           "FROM PurchaseOrder po " +
+           "WHERE po.createdAt >= :startInstant AND po.createdAt <= :endInstant " +
+           "GROUP BY po.supplier.id, po.supplier.name " +
+           "ORDER BY COALESCE(SUM(CASE WHEN po.status = com.smartinventory.purchase.model.PurchaseOrderStatus.RECEIVED THEN po.totalAmount ELSE 0 END), 0) DESC")
+    java.util.List<Object[]> getSupplierPurchaseSummaries(
+            @Param("startInstant") java.time.Instant startInstant,
+            @Param("endInstant") java.time.Instant endInstant
+    );
+
+    @Query(value = "SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier s " +
+           "WHERE po.createdAt >= :startInstant AND po.createdAt <= :endInstant " +
+           "AND (:status IS NULL OR po.status = :status) " +
+           "AND (:supplierId IS NULL OR s.id = :supplierId) " +
+           "AND (:search IS NULL OR :search = '' OR " +
+           " LOWER(po.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))",
+           countQuery = "SELECT COUNT(po) FROM PurchaseOrder po JOIN po.supplier s " +
+           "WHERE po.createdAt >= :startInstant AND po.createdAt <= :endInstant " +
+           "AND (:status IS NULL OR po.status = :status) " +
+           "AND (:supplierId IS NULL OR s.id = :supplierId) " +
+           "AND (:search IS NULL OR :search = '' OR " +
+           " LOWER(po.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<PurchaseOrder> searchPurchaseOrdersReport(
+            @Param("startInstant") java.time.Instant startInstant,
+            @Param("endInstant") java.time.Instant endInstant,
+            @Param("status") PurchaseOrderStatus status,
+            @Param("supplierId") Long supplierId,
+            @Param("search") String search,
+            Pageable pageable
+    );
 }

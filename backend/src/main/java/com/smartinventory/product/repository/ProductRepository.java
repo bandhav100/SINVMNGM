@@ -74,4 +74,29 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "(LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "ORDER BY p.quantity ASC")
     Page<Product> searchLowStockProducts(@Param("search") String search, Pageable pageable);
+
+    @Query(value = "SELECT p FROM Product p LEFT JOIN FETCH p.category c WHERE " +
+           "(:categoryId IS NULL OR c.id = :categoryId) AND " +
+           "(:status IS NULL OR :status = '' OR :status = 'ALL' OR " +
+           " (:status = 'OUT_OF_STOCK' AND p.quantity = 0) OR " +
+           " (:status = 'LOW_STOCK' AND p.quantity > 0 AND p.quantity <= p.reorderLevel) OR " +
+           " (:status = 'IN_STOCK' AND p.quantity > p.reorderLevel)) AND " +
+           "(:search IS NULL OR :search = '' OR " +
+           " LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%')))",
+           countQuery = "SELECT COUNT(p) FROM Product p LEFT JOIN p.category c WHERE " +
+           "(:categoryId IS NULL OR c.id = :categoryId) AND " +
+           "(:status IS NULL OR :status = '' OR :status = 'ALL' OR " +
+           " (:status = 'OUT_OF_STOCK' AND p.quantity = 0) OR " +
+           " (:status = 'LOW_STOCK' AND p.quantity > 0 AND p.quantity <= p.reorderLevel) OR " +
+           " (:status = 'IN_STOCK' AND p.quantity > p.reorderLevel)) AND " +
+           "(:search IS NULL OR :search = '' OR " +
+           " LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Product> searchInventoryReport(
+            @Param("categoryId") Long categoryId,
+            @Param("status") String status,
+            @Param("search") String search,
+            Pageable pageable
+    );
 }

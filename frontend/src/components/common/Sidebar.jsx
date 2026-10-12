@@ -77,8 +77,8 @@ const allNavItems = [
     path: '/reports',
     label: 'Reports',
     icon: FileBarChart,
-    phase: 'Phase 9',
-    roles: ['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER']
+    phase: 'Live',
+    roles: ['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']
   },
   {
     path: '/users',

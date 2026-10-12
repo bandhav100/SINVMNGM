@@ -19,4 +19,27 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long>, J
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT so FROM SalesOrder so WHERE so.id = :id")
     Optional<SalesOrder> findByIdWithLock(@Param("id") Long id);
+
+    @Query("SELECT COUNT(so) FROM SalesOrder so WHERE so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
+           "AND so.completedAt >= :startInstant AND so.completedAt <= :endInstant")
+    long countCompletedOrdersInRange(@Param("startInstant") java.time.Instant startInstant, @Param("endInstant") java.time.Instant endInstant);
+
+    @Query(value = "SELECT so FROM SalesOrder so " +
+           "WHERE so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
+           "AND so.completedAt >= :startInstant AND so.completedAt <= :endInstant " +
+           "AND (:search IS NULL OR :search = '' OR " +
+           " LOWER(so.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(so.customerName) LIKE LOWER(CONCAT('%', :search, '%')))",
+           countQuery = "SELECT COUNT(so) FROM SalesOrder so " +
+           "WHERE so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
+           "AND so.completedAt >= :startInstant AND so.completedAt <= :endInstant " +
+           "AND (:search IS NULL OR :search = '' OR " +
+           " LOWER(so.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(so.customerName) LIKE LOWER(CONCAT('%', :search, '%')))")
+    org.springframework.data.domain.Page<SalesOrder> searchCompletedOrdersReport(
+            @Param("startInstant") java.time.Instant startInstant,
+            @Param("endInstant") java.time.Instant endInstant,
+            @Param("search") String search,
+            org.springframework.data.domain.Pageable pageable
+    );
 }

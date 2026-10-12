@@ -155,6 +155,13 @@ public class SecurityConfig {
                         // Low-Stock Alerts RBAC
                         .requestMatchers("/api/v1/alerts", "/api/v1/alerts/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
 
+                        // Reports & Business Analytics RBAC
+                        .requestMatchers("/api/v1/reports/inventory").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
+                        .requestMatchers("/api/v1/reports/sales").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "SALES_STAFF")
+                        .requestMatchers("/api/v1/reports/purchases").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER")
+                        .requestMatchers("/api/v1/reports/inventory-movements", "/api/v1/reports/stock-valuation").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER")
+                        .requestMatchers("/api/v1/reports", "/api/v1/reports/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
+
                         // All other authenticated endpoints (including /api/v1/auth/me and /api/v1/auth/logout)
                         .anyRequest().authenticated()
                 )

@@ -12,6 +12,7 @@ import PurchasesPage from './pages/purchases/PurchasesPage';
 import SalesPage from './pages/sales/SalesPage';
 import SmartInsightsPage from './pages/insights/SmartInsightsPage';
 import AlertsPage from './pages/alerts/AlertsPage';
+import ReportsPage from './pages/reports/ReportsPage';
 import ModulePlaceholderPage from './pages/common/ModulePlaceholderPage';
 import {
   LayoutDashboard,
@@ -154,19 +155,8 @@ export default function App() {
             <Route
               path="reports"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER']}>
-                  <ModulePlaceholderPage
-                    title="Business Reports & Analytics"
-                    icon={FileBarChart}
-                    phase="Phase 9"
-                    description="Backend-generated reports covering stock valuation, movement audits, sales breakdowns, and CSV export."
-                    features={[
-                      'Inventory valuation summary (Cost vs Selling price)',
-                      'Sales & profit margin breakdown by category & region',
-                      'Full stock movement ledger report with date range filters',
-                      '1-click CSV download for offline accounting'
-                    ]}
-                  />
+                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
+                  <ReportsPage />
                 </ProtectedRoute>
               }
             />
