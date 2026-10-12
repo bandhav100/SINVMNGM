@@ -140,6 +140,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         order.setNotes(request.notes());
 
         order.clearItems();
+        purchaseOrderRepository.flush();
         populateAndCalculateItems(order, request.items());
 
         PurchaseOrder updatedOrder = purchaseOrderRepository.save(order);

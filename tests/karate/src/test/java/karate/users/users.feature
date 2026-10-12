@@ -77,7 +77,7 @@ Feature: User Management and Role-Based Access Control API Tests
     * configure headers = null
     Given path '/api/v1/auth/login'
     And header X-Client-Type = 'api'
-    And request { usernameOrEmail: staffUsername, password: "Password@123" }
+    And request { usernameOrEmail: '#(staffUsername)', password: "Password@123" }
     When method post
     Then status 200
     * def salesToken = response.token

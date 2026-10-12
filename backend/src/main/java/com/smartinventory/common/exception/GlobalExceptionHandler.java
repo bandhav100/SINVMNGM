@@ -75,6 +75,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ApiErrorResponse> handleInsufficientStock(InsufficientStockException ex, HttpServletRequest request) {
+        ApiErrorResponse error = ApiErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(InitialSetupCompletedException.class)
     public ResponseEntity<ApiErrorResponse> handleInitialSetupCompleted(InitialSetupCompletedException ex, HttpServletRequest request) {
         ApiErrorResponse error = ApiErrorResponse.of(

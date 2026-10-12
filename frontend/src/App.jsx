@@ -9,6 +9,7 @@ import ProductsPage from './pages/products/ProductsPage';
 import SuppliersPage from './pages/suppliers/SuppliersPage';
 import UsersPage from './pages/users/UsersPage';
 import PurchasesPage from './pages/purchases/PurchasesPage';
+import SalesPage from './pages/sales/SalesPage';
 import ModulePlaceholderPage from './pages/common/ModulePlaceholderPage';
 import {
   LayoutDashboard,
@@ -124,19 +125,8 @@ export default function App() {
             <Route
               path="sales"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'SALES_STAFF']}>
-                  <ModulePlaceholderPage
-                    title="Sales Transactions"
-                    icon={TrendingUp}
-                    phase="Phase 7"
-                    description="Order processing, stock availability verification, instant checkout, and automatic stock deductions."
-                    features={[
-                      'Point-of-sale style order creation with live inventory check',
-                      'Strict oversell prevention & transactional stock deduction',
-                      'Automatic tax, line item, and grand total calculation',
-                      'Permitted order cancellation with stock reversal logging'
-                    ]}
-                  />
+                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
+                  <SalesPage />
                 </ProtectedRoute>
               }
             />

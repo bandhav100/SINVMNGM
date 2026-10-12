@@ -8,7 +8,8 @@ function fn() {
         productsUrl: baseUrl + '/api/v1/products',
         categoriesUrl: baseUrl + '/api/v1/categories',
         suppliersUrl: baseUrl + '/api/v1/suppliers',
-        purchasesUrl: baseUrl + '/api/v1/purchases'
+        purchasesUrl: baseUrl + '/api/v1/purchases',
+        salesUrl: baseUrl + '/api/v1/sales'
     };
     karate.configure('connectTimeout', 10000);
     karate.configure('readTimeout', 10000);

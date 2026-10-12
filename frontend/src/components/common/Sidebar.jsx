@@ -56,8 +56,8 @@ const allNavItems = [
     path: '/sales',
     label: 'Sales',
     icon: TrendingUp,
-    phase: 'Phase 7',
-    roles: ['ADMIN', 'SALES_STAFF']
+    phase: 'Live',
+    roles: ['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']
   },
   {
     path: '/insights',
