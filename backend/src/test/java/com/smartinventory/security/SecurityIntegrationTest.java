@@ -374,4 +374,75 @@ class SecurityIntegrationTest {
                 .isInstanceOf(LastActiveAdminException.class)
                 .hasMessageContaining("only remaining active Administrator");
     }
+
+    @Test
+    @DisplayName("Disabled user token invalidation: Active token becomes immediately rejected once account is deactivated")
+    void testDisabledUserImmediateTokenRejection() throws Exception {
+        User staff = createTestUser("active_worker", "worker@sims.local", Role.SALES_STAFF, true);
+        String token = getBearerToken(staff);
+
+        // 1. Initially active -> can access /me
+        mockMvc.perform(get("/api/v1/auth/me").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("active_worker"));
+
+        // 2. Deactivate the user
+        staff.setActive(false);
+        userRepository.save(staff);
+
+        // 3. Same token should now be rejected immediately because userDetails.isEnabled() is false
+        mockMvc.perform(get("/api/v1/auth/me").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Settings and Inventory RBAC: Strict role authorization enforcement")
+    void testSettingsAndInventoryRbac() throws Exception {
+        User admin = createTestUser("sec_admin", "sec_admin@sims.local", Role.ADMIN, true);
+        User invManager = createTestUser("sec_inv", "sec_inv@sims.local", Role.INVENTORY_MANAGER, true);
+        User purchManager = createTestUser("sec_purch", "sec_purch@sims.local", Role.PURCHASE_MANAGER, true);
+        User salesStaff = createTestUser("sec_sales", "sec_sales@sims.local", Role.SALES_STAFF, true);
+
+        String adminToken = getBearerToken(admin);
+        String invToken = getBearerToken(invManager);
+        String purchToken = getBearerToken(purchManager);
+        String salesToken = getBearerToken(salesStaff);
+
+        // 1. Settings GET -> ADMIN allowed, others 403 Forbidden
+        mockMvc.perform(get("/api/v1/settings").header(HttpHeaders.AUTHORIZATION, adminToken)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/settings").header(HttpHeaders.AUTHORIZATION, invToken)).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/settings").header(HttpHeaders.AUTHORIZATION, purchToken)).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/settings").header(HttpHeaders.AUTHORIZATION, salesToken)).andExpect(status().isForbidden());
+
+        // 2. Inventory Adjustments POST -> ADMIN and INVENTORY_MANAGER allowed (or rejected at body validation), others 403 Forbidden
+        mockMvc.perform(post("/api/v1/inventory/adjustments")
+                        .header(HttpHeaders.AUTHORIZATION, purchToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/inventory/adjustments")
+                        .header(HttpHeaders.AUTHORIZATION, salesToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Sensitive data exposure: Passwords and hashes are strictly excluded from user responses")
+    void testSensitiveDataExclusion() throws Exception {
+        User admin = createTestUser("sec_leak_check", "leak@sims.local", Role.ADMIN, true);
+        String adminToken = getBearerToken(admin);
+
+        mockMvc.perform(get("/api/v1/users").header(HttpHeaders.AUTHORIZATION, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.content[0].password").doesNotExist());
+
+        mockMvc.perform(get("/api/v1/auth/me").header(HttpHeaders.AUTHORIZATION, adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.password").doesNotExist());
+    }
 }
+
