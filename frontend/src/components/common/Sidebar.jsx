@@ -42,8 +42,8 @@ const allNavItems = [
     path: '/inventory',
     label: 'Inventory',
     icon: Layers,
-    phase: 'Phase 5',
-    roles: ['ADMIN', 'INVENTORY_MANAGER']
+    phase: 'Live',
+    roles: ['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']
   },
   {
     path: '/purchases',

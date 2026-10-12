@@ -15,6 +15,7 @@ import AlertsPage from './pages/alerts/AlertsPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import InventoryPage from './pages/inventory/InventoryPage';
 import ModulePlaceholderPage from './pages/common/ModulePlaceholderPage';
 import {
   LayoutDashboard,
@@ -92,19 +93,8 @@ export default function App() {
             <Route
               path="inventory"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER']}>
-                  <ModulePlaceholderPage
-                    title="Inventory & Stock Ledger"
-                    icon={Layers}
-                    phase="Phase 5"
-                    description="Authoritative real-time stock levels, adjustment workflows with audit reasons, and immutable stock movement tracking."
-                    features={[
-                      'Manual stock adjustments with required reasons',
-                      'Complete stock movement audit log (Receive, Sold, Adjusted)',
-                      'Automatic concurrency & negative-stock protection',
-                      'Synchronized ledger with purchases and sales'
-                    ]}
-                  />
+                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
+                  <InventoryPage />
                 </ProtectedRoute>
               }
             />

@@ -74,4 +74,27 @@ public interface InventoryTransactionRepository extends JpaRepository<InventoryT
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"product"})
     List<InventoryTransaction> findTop5ByOrderByCreatedAtDesc();
+
+    @org.springframework.data.jpa.repository.Query(value = "SELECT it FROM InventoryTransaction it " +
+           "JOIN FETCH it.product p " +
+           "LEFT JOIN FETCH it.performedBy u " +
+           "WHERE (:productId IS NULL OR p.id = :productId) " +
+           "AND (:transactionType IS NULL OR it.transactionType = :transactionType) " +
+           "AND (:search IS NULL OR :search = '' OR " +
+           " LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(it.notes) LIKE LOWER(CONCAT('%', :search, '%')))",
+           countQuery = "SELECT COUNT(it) FROM InventoryTransaction it JOIN it.product p " +
+           "WHERE (:productId IS NULL OR p.id = :productId) " +
+           "AND (:transactionType IS NULL OR it.transactionType = :transactionType) " +
+           "AND (:search IS NULL OR :search = '' OR " +
+           " LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           " LOWER(it.notes) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<InventoryTransaction> searchTransactions(
+            @org.springframework.data.repository.query.Param("productId") Long productId,
+            @org.springframework.data.repository.query.Param("transactionType") com.smartinventory.inventory.model.InventoryTransactionType transactionType,
+            @org.springframework.data.repository.query.Param("search") String search,
+            Pageable pageable
+    );
 }

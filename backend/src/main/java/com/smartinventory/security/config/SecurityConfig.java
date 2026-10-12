@@ -168,6 +168,10 @@ public class SecurityConfig {
                         // Dashboard RBAC (All authenticated roles)
                         .requestMatchers("/api/v1/dashboard", "/api/v1/dashboard/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
 
+                        // Inventory Management RBAC
+                        .requestMatchers(HttpMethod.POST, "/api/v1/inventory/adjustments", "/api/v1/inventory/adjustments/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER")
+                        .requestMatchers("/api/v1/inventory", "/api/v1/inventory/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
+
                         // All other authenticated endpoints (including /api/v1/auth/me and /api/v1/auth/logout)
                         .anyRequest().authenticated()
                 )
