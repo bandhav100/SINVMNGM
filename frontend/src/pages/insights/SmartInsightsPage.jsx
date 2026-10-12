@@ -310,7 +310,7 @@ export default function SmartInsightsPage() {
             <DollarSign style={{ width: '1.25rem', height: '1.25rem', color: '#3b82f6' }} />
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0.5rem 0 0 0', color: '#3b82f6' }}>
-            ${overview && overview.totalPotentialRetailValue != null ? Number(overview.totalPotentialRetailValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+            ₹{overview && overview.totalPotentialRetailValue != null ? Number(overview.totalPotentialRetailValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
           </div>
           <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Based on catalog selling price</span>
         </div>
@@ -491,7 +491,7 @@ export default function SmartInsightsPage() {
                               {Number(item.unitsSold).toLocaleString()}
                             </td>
                             <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-main)' }}>
-                              ${Number(item.totalRevenue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ₹{Number(item.totalRevenue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                           </tr>
                         ))}
@@ -676,10 +676,10 @@ export default function SmartInsightsPage() {
                           {item.quantity}
                         </td>
                         <td style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--color-text-muted)' }}>
-                          ${Number(item.unitSellingPrice).toFixed(2)}
+                          ₹{Number(item.unitSellingPrice).toFixed(2)}
                         </td>
                         <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 700, color: '#3b82f6' }}>
-                          ${Number(item.totalRetailValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          ₹{Number(item.totalRetailValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))}

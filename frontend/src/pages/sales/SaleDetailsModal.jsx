@@ -227,10 +227,10 @@ export default function SaleDetailsModal({
                       {item.quantity}
                     </td>
                     <td className="py-2.5 px-3 text-right text-slate-600 dark:text-slate-400">
-                      ${Number(item.unitPrice).toFixed(2)}
+                      ₹{Number(item.unitPrice).toFixed(2)}
                     </td>
                     <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-slate-100">
-                      ${Number(item.lineTotal).toFixed(2)}
+                      ₹{Number(item.lineTotal).toFixed(2)}
                     </td>
                   </tr>
                 ))}
@@ -243,7 +243,7 @@ export default function SaleDetailsModal({
                 <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Total Sale Amount
               </span>
               <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                ${Number(sale.totalAmount).toFixed(2)}
+                ₹{Number(sale.totalAmount).toFixed(2)}
               </span>
             </div>
           </div>

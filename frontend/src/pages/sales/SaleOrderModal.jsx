@@ -232,7 +232,7 @@ export default function SaleOrderModal({
                     <th className="py-2.5 px-3">Product</th>
                     <th className="py-2.5 px-3 w-28">Available</th>
                     <th className="py-2.5 px-3 w-28">Quantity</th>
-                    <th className="py-2.5 px-3 w-32">Unit Price ($)</th>
+                    <th className="py-2.5 px-3 w-32">Unit Price (₹)</th>
                     <th className="py-2.5 px-3 w-32 text-right">Line Total</th>
                     <th className="py-2.5 px-2 w-12 text-center"></th>
                   </tr>
@@ -339,7 +339,7 @@ export default function SaleOrderModal({
 
                         {/* Line Total */}
                         <td className="py-2.5 px-3 text-right font-semibold text-slate-900 dark:text-slate-100">
-                          ${calculateLineTotal(item)}
+                          ₹{calculateLineTotal(item)}
                         </td>
 
                         {/* Remove Action */}
@@ -370,9 +370,9 @@ export default function SaleOrderModal({
               </span>
               <div className="text-right">
                 <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                  ${calculateTotalAmount()}
+                  ₹{calculateTotalAmount()}
                 </span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 block">USD</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block">INR</span>
               </div>
             </div>
           </div>

@@ -334,7 +334,7 @@ export default function SalesPage() {
             </div>
           </div>
           <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-2">
-            ${completedRevenue.toFixed(2)}
+            ₹{completedRevenue.toFixed(2)}
           </p>
           <span className="text-[11px] text-slate-400">Completed on current page</span>
         </div>
@@ -495,7 +495,7 @@ export default function SalesPage() {
 
                       {/* Total Amount */}
                       <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">
-                        ${Number(order.totalAmount).toFixed(2)}
+                        ₹{Number(order.totalAmount).toFixed(2)}
                       </td>
 
                       {/* Status */}

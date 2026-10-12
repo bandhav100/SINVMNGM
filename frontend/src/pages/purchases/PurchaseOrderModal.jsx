@@ -262,7 +262,7 @@ export default function PurchaseOrderModal({
                 <tr>
                   <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 600 }}>Product *</th>
                   <th style={{ padding: '0.5rem 0.75rem', textAlign: 'right', width: '110px', fontWeight: 600 }}>Quantity *</th>
-                  <th style={{ padding: '0.5rem 0.75rem', textAlign: 'right', width: '130px', fontWeight: 600 }}>Unit Cost ($) *</th>
+                  <th style={{ padding: '0.5rem 0.75rem', textAlign: 'right', width: '130px', fontWeight: 600 }}>Unit Cost (₹) *</th>
                   <th style={{ padding: '0.5rem 0.75rem', textAlign: 'right', width: '110px', fontWeight: 600 }}>Subtotal</th>
                   <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '50px' }}></th>
                 </tr>
@@ -316,7 +316,7 @@ export default function PurchaseOrderModal({
                       />
                     </td>
                     <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-main)' }}>
-                      ${calculateItemTotal(item)}
+                      ₹{calculateItemTotal(item)}
                     </td>
                     <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
                       <button
@@ -362,7 +362,7 @@ export default function PurchaseOrderModal({
             <span>Calculated Order Value</span>
           </div>
           <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-            ${calculateGrandTotal()}
+            ₹{calculateGrandTotal()}
           </div>
         </div>
 

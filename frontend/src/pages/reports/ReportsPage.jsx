@@ -208,10 +208,10 @@ export default function ReportsPage() {
   };
 
   const formatCurrency = (val) => {
-    if (val === null || val === undefined) return '$0.00';
+    if (val === null || val === undefined) return '₹0.00';
     const num = typeof val === 'number' ? val : parseFloat(val);
-    if (isNaN(num)) return '$0.00';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+    if (isNaN(num)) return '₹0.00';
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
   };
 
   const formatDate = (isoString) => {

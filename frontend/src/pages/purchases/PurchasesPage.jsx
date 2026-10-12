@@ -301,7 +301,7 @@ export default function PurchasesPage() {
           <div>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500, display: 'block' }}>Total Page Value</span>
             <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-              ${purchases.reduce((acc, p) => acc + (parseFloat(p.totalAmount) || 0), 0).toFixed(2)}
+              ₹{purchases.reduce((acc, p) => acc + (parseFloat(p.totalAmount) || 0), 0).toFixed(2)}
             </span>
           </div>
         </div>
@@ -454,7 +454,7 @@ export default function PurchasesPage() {
                     {po.itemsCount}
                   </td>
                   <td style={{ padding: '0.875rem 1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-primary)' }}>
-                    ${Number(po.totalAmount).toFixed(2)}
+                    ₹{Number(po.totalAmount).toFixed(2)}
                   </td>
                   <td style={{ padding: '0.875rem 1rem', color: 'var(--color-text-muted)' }}>
                     {po.expectedDeliveryDate || '—'}

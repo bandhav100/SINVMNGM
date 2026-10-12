@@ -136,7 +136,7 @@ export default function PurchaseDetailsModal({
             <div style={{ textAlign: 'right' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block' }}>Total Amount</span>
               <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-                ${Number(order.totalAmount).toFixed(2)}
+                ₹{Number(order.totalAmount).toFixed(2)}
               </span>
             </div>
           </div>
@@ -255,9 +255,9 @@ export default function PurchaseDetailsModal({
                       <td style={{ padding: '0.625rem 0.875rem', fontWeight: 500 }}>{item.productName}</td>
                       <td style={{ padding: '0.625rem 0.875rem', color: 'var(--color-text-muted)' }}>{item.productSku}</td>
                       <td style={{ padding: '0.625rem 0.875rem', textAlign: 'right', fontWeight: 600 }}>{item.quantity}</td>
-                      <td style={{ padding: '0.625rem 0.875rem', textAlign: 'right' }}>${Number(item.unitCost).toFixed(2)}</td>
+                      <td style={{ padding: '0.625rem 0.875rem', textAlign: 'right' }}>₹{Number(item.unitCost).toFixed(2)}</td>
                       <td style={{ padding: '0.625rem 0.875rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-primary)' }}>
-                        ${Number(item.totalCost).toFixed(2)}
+                        ₹{Number(item.totalCost).toFixed(2)}
                       </td>
                     </tr>
                   ))}
