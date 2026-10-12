@@ -14,7 +14,7 @@ import {
   TrendingUp,
   ShoppingCart,
   ArrowRightLeft,
-  DollarSign,
+  IndianRupee,
   Calendar,
   Filter,
   Search,
@@ -352,8 +352,8 @@ export default function ReportsPage() {
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
-              <DollarSign className="w-4 h-4" />
-              Stock Valuation
+              <IndianRupee className="w-4 h-4" />
+              Stock Valuation (₹)
             </button>
           )}
         </nav>
@@ -809,7 +809,7 @@ export default function ReportsPage() {
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
                     <span>Net Sales Revenue</span>
-                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                    <IndianRupee className="w-4 h-4 text-emerald-600" />
                   </div>
                   <div className="mt-2 text-2xl font-bold text-emerald-600">
                     {formatCurrency(reportData.summary?.totalRevenue)}
@@ -992,7 +992,7 @@ export default function ReportsPage() {
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
                     <span>Actual Received Spend</span>
-                    <DollarSign className="w-4 h-4 text-blue-600" />
+                    <IndianRupee className="w-4 h-4 text-blue-600" />
                   </div>
                   <div className="mt-2 text-2xl font-bold text-blue-600">
                     {formatCurrency(reportData.summary?.receivedTotalCost)}
@@ -1320,7 +1320,7 @@ export default function ReportsPage() {
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
                     <span>Potential Retail Value</span>
-                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                    <IndianRupee className="w-4 h-4 text-emerald-600" />
                   </div>
                   <div className="mt-2 text-2xl font-bold text-emerald-600">
                     {formatCurrency(reportData.summary?.totalPotentialRetailValue)}

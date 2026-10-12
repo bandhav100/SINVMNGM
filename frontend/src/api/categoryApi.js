@@ -15,6 +15,11 @@ export const categoryApi = {
     return response.data;
   },
 
+  getAll: async () => {
+    const response = await apiClient.get('/categories/all');
+    return response.data;
+  },
+
   getCategoryById: async (id) => {
     const response = await apiClient.get(`/categories/${id}`);
     return response.data;

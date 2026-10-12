@@ -22,7 +22,7 @@ import {
   CheckCircle2,
   XCircle,
   FileText,
-  DollarSign,
+  IndianRupee,
   Truck,
   Calendar,
   X
@@ -296,7 +296,7 @@ export default function PurchasesPage() {
 
         <div className="metric-card" style={{ padding: '1.25rem', backgroundColor: 'var(--color-card-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' }}>
-            <DollarSign size={22} />
+            <IndianRupee size={22} />
           </div>
           <div>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500, display: 'block' }}>Total Page Value</span>

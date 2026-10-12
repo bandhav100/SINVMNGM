@@ -18,7 +18,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  DollarSign,
+  IndianRupee,
   User,
   ShoppingBag,
   Calendar,
@@ -330,7 +330,7 @@ export default function SalesPage() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500">Page Revenue</span>
             <div className="p-2 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-lg">
-              <DollarSign className="w-4 h-4" />
+              <IndianRupee className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-2">

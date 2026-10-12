@@ -15,7 +15,7 @@ import {
   AlertTriangle,
   Package,
   Layers,
-  DollarSign,
+  IndianRupee,
   ShoppingCart,
   ArrowRight,
   Info,
@@ -307,7 +307,7 @@ export default function SmartInsightsPage() {
         <div style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '0.75rem', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
             <span>Retail Valuation</span>
-            <DollarSign style={{ width: '1.25rem', height: '1.25rem', color: '#3b82f6' }} />
+            <IndianRupee style={{ width: '1.25rem', height: '1.25rem', color: '#3b82f6' }} />
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0.5rem 0 0 0', color: '#3b82f6' }}>
             ₹{overview && overview.totalPotentialRetailValue != null ? Number(overview.totalPotentialRetailValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}

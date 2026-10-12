@@ -13,7 +13,7 @@ import {
   Phone,
   FileText,
   Clock,
-  DollarSign,
+  IndianRupee,
   AlertTriangle
 } from 'lucide-react';
 
@@ -240,7 +240,7 @@ export default function SaleDetailsModal({
             {/* Total Footer */}
             <div className="bg-slate-50 dark:bg-slate-800/80 px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Total Sale Amount
+                <IndianRupee className="w-3.5 h-3.5 text-emerald-500" /> Total Sale Amount
               </span>
               <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 ₹{Number(sale.totalAmount).toFixed(2)}

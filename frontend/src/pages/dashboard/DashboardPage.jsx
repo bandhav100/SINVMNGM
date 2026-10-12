@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   ShoppingCart,
   Truck,
-  DollarSign,
+  IndianRupee,
   ArrowRight,
   RefreshCw,
   Clock,
@@ -276,7 +276,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
               <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--color-text-secondary)' }}>Inventory Valuation</span>
               <div style={{ padding: '0.4rem', borderRadius: 'var(--radius-md)', background: '#ede9fe', color: '#6d28d9' }}>
-                <DollarSign size={20} />
+                <IndianRupee size={20} />
               </div>
             </div>
             <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '0.25rem' }}>
@@ -486,7 +486,7 @@ export default function DashboardPage() {
         {/* Valuation Summary */}
         <div>
           <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--color-text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <DollarSign size={16} /> Retail Stock Valuation
+            <IndianRupee size={16} /> Retail Stock Valuation
           </h3>
           <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--color-text-primary)' }}>
             {formatCurrency(summary?.potentialRetailValuation)}

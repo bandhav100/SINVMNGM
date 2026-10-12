@@ -22,7 +22,7 @@ import {
   History,
   FileText,
   Sliders,
-  DollarSign,
+  IndianRupee,
   Package,
   ChevronLeft,
   ChevronRight,
@@ -95,7 +95,7 @@ export default function InventoryPage() {
 
   // Fetch Categories for dropdown
   useEffect(() => {
-    categoryApi.getAll()
+    (categoryApi.getAllCategories || categoryApi.getAll)()
       .then(res => setCategories(Array.isArray(res) ? res : (res?.data || [])))
       .catch(err => console.error('Failed to load categories:', err));
   }, []);
