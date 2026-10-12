@@ -13,6 +13,7 @@ import SalesPage from './pages/sales/SalesPage';
 import SmartInsightsPage from './pages/insights/SmartInsightsPage';
 import AlertsPage from './pages/alerts/AlertsPage';
 import ReportsPage from './pages/reports/ReportsPage';
+import SettingsPage from './pages/settings/SettingsPage';
 import ModulePlaceholderPage from './pages/common/ModulePlaceholderPage';
 import {
   LayoutDashboard,
@@ -165,18 +166,7 @@ export default function App() {
               path="settings"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <ModulePlaceholderPage
-                    title="System Settings"
-                    icon={Settings}
-                    phase="Phase 10"
-                    description="Business profile, default reorder thresholds, inventory alert parameters, and administrative controls."
-                    features={[
-                      'Company profile & currency settings',
-                      'Global default reorder levels & stock warning thresholds',
-                      'System health & PostgreSQL database status',
-                      'Audit log inspection'
-                    ]}
-                  />
+                  <SettingsPage />
                 </ProtectedRoute>
               }
             />

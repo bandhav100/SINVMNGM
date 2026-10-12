@@ -162,6 +162,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/reports/inventory-movements", "/api/v1/reports/stock-valuation").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER")
                         .requestMatchers("/api/v1/reports", "/api/v1/reports/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
 
+                        // System Settings RBAC (ADMIN only)
+                        .requestMatchers("/api/v1/settings", "/api/v1/settings/**").hasRole("ADMIN")
+
                         // All other authenticated endpoints (including /api/v1/auth/me and /api/v1/auth/logout)
                         .anyRequest().authenticated()
                 )

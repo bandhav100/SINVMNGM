@@ -103,6 +103,8 @@ class InsightAndAlertIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        tearDown();
+
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();

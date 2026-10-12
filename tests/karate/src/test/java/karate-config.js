@@ -12,7 +12,8 @@ function fn() {
         salesUrl: baseUrl + '/api/v1/sales',
         insightsUrl: baseUrl + '/api/v1/insights',
         alertsUrl: baseUrl + '/api/v1/alerts',
-        reportsUrl: baseUrl + '/api/v1/reports'
+        reportsUrl: baseUrl + '/api/v1/reports',
+        settingsUrl: baseUrl + '/api/v1/settings'
     };
     karate.configure('connectTimeout', 10000);
     karate.configure('readTimeout', 10000);

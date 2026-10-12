@@ -91,7 +91,7 @@ const allNavItems = [
     path: '/settings',
     label: 'Settings',
     icon: Settings,
-    phase: 'Phase 10',
+    phase: 'Live',
     roles: ['ADMIN']
   }
 ];
