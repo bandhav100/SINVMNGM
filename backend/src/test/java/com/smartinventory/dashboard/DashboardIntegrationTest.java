@@ -5,6 +5,7 @@ import com.smartinventory.category.repository.CategoryRepository;
 import com.smartinventory.inventory.entity.InventoryTransaction;
 import com.smartinventory.inventory.model.InventoryTransactionType;
 import com.smartinventory.inventory.repository.InventoryTransactionRepository;
+import com.smartinventory.inventory.repository.StockAdjustmentRepository;
 import com.smartinventory.product.entity.Product;
 import com.smartinventory.product.repository.ProductRepository;
 import com.smartinventory.purchase.entity.PurchaseOrder;
@@ -78,6 +79,9 @@ class DashboardIntegrationTest {
 
     @Autowired
     private InventoryTransactionRepository inventoryTransactionRepository;
+
+    @Autowired
+    private StockAdjustmentRepository stockAdjustmentRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -193,6 +197,7 @@ class DashboardIntegrationTest {
     @AfterEach
     void tearDown() {
         inventoryTransactionRepository.deleteAll();
+        stockAdjustmentRepository.deleteAll();
         salesOrderItemRepository.deleteAll();
         salesOrderRepository.deleteAll();
         purchaseOrderItemRepository.deleteAll();
