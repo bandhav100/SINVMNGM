@@ -70,8 +70,8 @@ public class SystemSettingsServiceImpl implements SystemSettingsService {
         s.setCompanyName("Smart Inventory Systems");
         s.setCompanyEmail("admin@sims.local");
         s.setCompanyPhone("+1 (555) 019-2834");
-        s.setCurrency("USD");
-        s.setTimezone("UTC");
+        s.setCurrency("INR");
+        s.setTimezone("Asia/Kolkata");
         s.setDefaultReorderThreshold(10);
         s.setLowStockAlertsEnabled(true);
         s.setOutOfStockAlertsEnabled(true);

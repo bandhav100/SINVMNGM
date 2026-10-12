@@ -164,7 +164,7 @@ public class InsightServiceImpl implements InsightService {
         return new StockValuationDto(
                 false,
                 explanation,
-                "USD",
+                "INR",
                 totalStockUnits,
                 totalRetailValue,
                 pageDto

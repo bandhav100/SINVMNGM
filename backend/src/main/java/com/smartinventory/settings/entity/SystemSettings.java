@@ -22,7 +22,7 @@ public class SystemSettings {
     private String companyPhone;
 
     @Column(name = "currency", nullable = false, length = 10)
-    private String currency = "USD";
+    private String currency = "INR";
 
     @Column(name = "timezone", nullable = false, length = 50)
     private String timezone = "UTC";
