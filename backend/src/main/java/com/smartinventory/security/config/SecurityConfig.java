@@ -148,6 +148,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/sales", "/api/v1/sales/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
                         .requestMatchers("/api/v1/sales", "/api/v1/sales/**").hasAnyRole("ADMIN", "SALES_STAFF")
 
+                        // Smart Inventory Insights RBAC
+                        .requestMatchers("/api/v1/insights/stock-valuation", "/api/v1/insights/reorder-recommendations").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER")
+                        .requestMatchers("/api/v1/insights", "/api/v1/insights/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
+
+                        // Low-Stock Alerts RBAC
+                        .requestMatchers("/api/v1/alerts", "/api/v1/alerts/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
+
                         // All other authenticated endpoints (including /api/v1/auth/me and /api/v1/auth/logout)
                         .anyRequest().authenticated()
                 )

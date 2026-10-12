@@ -9,7 +9,9 @@ function fn() {
         categoriesUrl: baseUrl + '/api/v1/categories',
         suppliersUrl: baseUrl + '/api/v1/suppliers',
         purchasesUrl: baseUrl + '/api/v1/purchases',
-        salesUrl: baseUrl + '/api/v1/sales'
+        salesUrl: baseUrl + '/api/v1/sales',
+        insightsUrl: baseUrl + '/api/v1/insights',
+        alertsUrl: baseUrl + '/api/v1/alerts'
     };
     karate.configure('connectTimeout', 10000);
     karate.configure('readTimeout', 10000);

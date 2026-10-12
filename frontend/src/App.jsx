@@ -10,6 +10,8 @@ import SuppliersPage from './pages/suppliers/SuppliersPage';
 import UsersPage from './pages/users/UsersPage';
 import PurchasesPage from './pages/purchases/PurchasesPage';
 import SalesPage from './pages/sales/SalesPage';
+import SmartInsightsPage from './pages/insights/SmartInsightsPage';
+import AlertsPage from './pages/alerts/AlertsPage';
 import ModulePlaceholderPage from './pages/common/ModulePlaceholderPage';
 import {
   LayoutDashboard,
@@ -134,19 +136,8 @@ export default function App() {
             <Route
               path="insights"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER']}>
-                  <ModulePlaceholderPage
-                    title="Smart Insights & Demand Forecasting"
-                    icon={Brain}
-                    phase="Phase 9"
-                    description="Intelligent inventory analysis powered by dataset history, identifying velocity trends and recommending replenishment."
-                    features={[
-                      'Fast-moving, slow-moving, and dead-stock automated classification',
-                      'Historical demand trend analysis across regions',
-                      'Recommended reorder quantities with transparent rules',
-                      'Stockout risk prevention alerts before items deplete'
-                    ]}
-                  />
+                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
+                  <SmartInsightsPage />
                 </ProtectedRoute>
               }
             />
@@ -154,18 +145,9 @@ export default function App() {
             <Route
               path="alerts"
               element={
-                <ModulePlaceholderPage
-                  title="Alerts & Notification Center"
-                  icon={Bell}
-                  phase="Phase 8"
-                  description="Active notifications for low inventory, out-of-stock items, and purchasing warnings."
-                  features={[
-                    'Low-stock threshold triggers based on reorder levels',
-                    'Out-of-stock emergency alerts with vendor links',
-                    'Duplicate alert suppression for unresolved conditions',
-                    'Acknowledgement & resolution workflow'
-                  ]}
-                />
+                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
+                  <AlertsPage />
+                </ProtectedRoute>
               }
             />
 

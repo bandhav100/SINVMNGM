@@ -63,14 +63,14 @@ const allNavItems = [
     path: '/insights',
     label: 'Smart Insights',
     icon: Brain,
-    phase: 'Phase 9',
-    roles: ['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER']
+    phase: 'Live',
+    roles: ['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']
   },
   {
     path: '/alerts',
     label: 'Alerts',
     icon: Bell,
-    phase: 'Phase 8',
+    phase: 'Live',
     roles: ['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']
   },
   {

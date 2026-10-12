@@ -29,4 +29,49 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id IN :ids ORDER BY p.id ASC")
     java.util.List<Product> findAllByIdInOrderByIdAscForUpdate(@Param("ids") java.util.List<Long> ids);
+
+    @Query("SELECT COUNT(p) FROM Product p")
+    long countTotalProducts();
+
+    @Query("SELECT COALESCE(SUM(p.quantity), 0) FROM Product p")
+    long sumTotalStockUnits();
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.quantity = 0")
+    long countOutOfStock();
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.quantity > 0 AND p.quantity <= p.reorderLevel")
+    long countLowStock();
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.quantity <= p.reorderLevel")
+    long countReorderRequired();
+
+    @Query("SELECT COALESCE(SUM(p.quantity * p.price), 0) FROM Product p")
+    java.math.BigDecimal sumTotalRetailValue();
+
+    @Query("SELECT p FROM Product p WHERE p.quantity <= p.reorderLevel ORDER BY p.quantity ASC")
+    java.util.List<Product> findReorderRequiredProducts();
+
+    @Query("SELECT p FROM Product p WHERE p.quantity = 0 ORDER BY p.name ASC")
+    Page<Product> findOutOfStockProducts(Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.quantity > 0 AND p.quantity <= p.reorderLevel ORDER BY p.quantity ASC")
+    Page<Product> findLowStockProducts(Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.quantity <= p.reorderLevel ORDER BY p.quantity ASC")
+    Page<Product> findAllAlertProducts(Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.quantity <= p.reorderLevel AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY p.quantity ASC")
+    Page<Product> searchAlertProducts(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.quantity = 0 AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY p.name ASC")
+    Page<Product> searchOutOfStockProducts(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.quantity > 0 AND p.quantity <= p.reorderLevel AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY p.quantity ASC")
+    Page<Product> searchLowStockProducts(@Param("search") String search, Pageable pageable);
 }
