@@ -85,4 +85,11 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             @Param("search") String search,
             Pageable pageable
     );
+
+    long countByStatus(PurchaseOrderStatus status);
+
+    @Query("SELECT COALESCE(SUM(po.totalAmount), 0) FROM PurchaseOrder po WHERE po.status = :status")
+    java.math.BigDecimal sumTotalAmountByStatus(@Param("status") PurchaseOrderStatus status);
+
+    java.util.List<PurchaseOrder> findTop5ByOrderByCreatedAtDesc();
 }

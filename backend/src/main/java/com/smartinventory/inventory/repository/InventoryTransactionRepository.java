@@ -71,4 +71,7 @@ public interface InventoryTransactionRepository extends JpaRepository<InventoryT
             @org.springframework.data.repository.query.Param("transactionType") com.smartinventory.inventory.model.InventoryTransactionType transactionType,
             Pageable pageable
     );
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"product"})
+    List<InventoryTransaction> findTop5ByOrderByCreatedAtDesc();
 }

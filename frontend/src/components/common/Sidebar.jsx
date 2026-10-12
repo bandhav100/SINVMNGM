@@ -35,7 +35,7 @@ const allNavItems = [
     path: '/dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
-    phase: 'Phase 8',
+    phase: 'Live',
     roles: ['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']
   },
   {

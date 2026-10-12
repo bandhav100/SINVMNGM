@@ -42,4 +42,11 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long>, J
             @Param("search") String search,
             org.springframework.data.domain.Pageable pageable
     );
+
+    long countByStatus(com.smartinventory.sale.model.SalesOrderStatus status);
+
+    @Query("SELECT COALESCE(SUM(so.totalAmount), 0) FROM SalesOrder so WHERE so.status = :status")
+    java.math.BigDecimal sumTotalAmountByStatus(@Param("status") com.smartinventory.sale.model.SalesOrderStatus status);
+
+    java.util.List<SalesOrder> findTop5ByOrderByCreatedAtDesc();
 }

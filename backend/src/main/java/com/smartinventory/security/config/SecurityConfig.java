@@ -165,6 +165,9 @@ public class SecurityConfig {
                         // System Settings RBAC (ADMIN only)
                         .requestMatchers("/api/v1/settings", "/api/v1/settings/**").hasRole("ADMIN")
 
+                        // Dashboard RBAC (All authenticated roles)
+                        .requestMatchers("/api/v1/dashboard", "/api/v1/dashboard/**").hasAnyRole("ADMIN", "INVENTORY_MANAGER", "PURCHASE_MANAGER", "SALES_STAFF")
+
                         // All other authenticated endpoints (including /api/v1/auth/me and /api/v1/auth/logout)
                         .anyRequest().authenticated()
                 )

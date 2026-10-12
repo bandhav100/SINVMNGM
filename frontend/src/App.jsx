@@ -14,6 +14,7 @@ import SmartInsightsPage from './pages/insights/SmartInsightsPage';
 import AlertsPage from './pages/alerts/AlertsPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
 import ModulePlaceholderPage from './pages/common/ModulePlaceholderPage';
 import {
   LayoutDashboard,
@@ -46,7 +47,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/products" replace />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
             
             {/* Products (All 4 roles) */}
             <Route
@@ -78,22 +79,13 @@ export default function App() {
               }
             />
 
-            {/* Module Placeholders */}
+            {/* Dashboard (All 4 roles) */}
             <Route
               path="dashboard"
               element={
-                <ModulePlaceholderPage
-                  title="Business Metrics Dashboard"
-                  icon={LayoutDashboard}
-                  phase="Phase 8"
-                  description="Real-time KPI overview featuring total products, stock valuations, low/out-of-stock counts, and recent transaction trends."
-                  features={[
-                    'Live stock count & total valuation metrics',
-                    'Recent purchase orders & sales activity feed',
-                    'Low-stock warning radar with 1-click replenishment',
-                    'Role-tailored metrics & charts'
-                  ]}
-                />
+                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
+                  <DashboardPage />
+                </ProtectedRoute>
               }
             />
 
