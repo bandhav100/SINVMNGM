@@ -444,5 +444,72 @@ class SecurityIntegrationTest {
                 .andExpect(jsonPath("$.passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.password").doesNotExist());
     }
+
+    @Test
+    @DisplayName("CORS: Production origin allows preflight OPTIONS and actual requests with credentials")
+    void testCors_productionOriginAndPreflight() throws Exception {
+        String prodOrigin = "https://stockwise-inventory-management-1mx3.onrender.com";
+
+        // 1. Preflight OPTIONS on public endpoint (/api/v1/auth/setup-status)
+        mockMvc.perform(options("/api/v1/auth/setup-status")
+                        .header(HttpHeaders.ORIGIN, prodOrigin)
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "Content-Type,Authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", prodOrigin))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"))
+                .andExpect(header().exists("Access-Control-Allow-Methods"))
+                .andExpect(header().exists("Access-Control-Allow-Headers"));
+
+        // 2. Preflight OPTIONS on login endpoint (/api/v1/auth/login)
+        mockMvc.perform(options("/api/v1/auth/login")
+                        .header(HttpHeaders.ORIGIN, prodOrigin)
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "Content-Type,Authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", prodOrigin))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+
+        // 3. Preflight OPTIONS on protected endpoint (/api/v1/auth/me) without credentials/auth
+        mockMvc.perform(options("/api/v1/auth/me")
+                        .header(HttpHeaders.ORIGIN, prodOrigin)
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "Content-Type,Authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", prodOrigin))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+
+        // 4. Actual GET request with production origin
+        mockMvc.perform(get("/api/v1/auth/setup-status")
+                        .header(HttpHeaders.ORIGIN, prodOrigin))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", prodOrigin))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    }
+
+    @Test
+    @DisplayName("CORS: Localhost development origin (http://localhost:5173) is preserved")
+    void testCors_localhostDevOrigin() throws Exception {
+        String localOrigin = "http://localhost:5173";
+
+        mockMvc.perform(options("/api/v1/auth/login")
+                        .header(HttpHeaders.ORIGIN, localOrigin)
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "Content-Type,Authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", localOrigin))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    }
+
+    @Test
+    @DisplayName("CORS: Disallowed origin does not receive Access-Control-Allow-Origin")
+    void testCors_disallowedOrigin() throws Exception {
+        String badOrigin = "https://untrusted-site.com";
+
+        mockMvc.perform(options("/api/v1/auth/login")
+                        .header(HttpHeaders.ORIGIN, badOrigin)
+                        .header("Access-Control-Request-Method", "POST"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
 }
 

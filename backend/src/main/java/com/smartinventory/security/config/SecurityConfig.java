@@ -58,15 +58,27 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of(
+                "https://stockwise-inventory-management-1mx3.onrender.com",
+                "http://localhost:5173",
                 "http://localhost",
                 "http://localhost:*",
                 "http://127.0.0.1",
                 "http://127.0.0.1:*"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With",
+                "X-XSRF-TOKEN",
+                "X-Client-Type",
+                "*"
+        ));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+        configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie", "X-XSRF-TOKEN"));
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -107,6 +119,9 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Permit preflight CORS OPTIONS requests without requiring authentication
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         // Public Endpoints
                         .requestMatchers(
                                 "/api/v1/auth/setup-status",
