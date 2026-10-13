@@ -17,21 +17,44 @@ import {
   Mail,
   Phone
 } from 'lucide-react';
-import heroBg1 from '../../assets/hero-bg-1.jpg';
-import heroBg2 from '../../assets/hero-bg-2.jpg';
-import heroBg3 from '../../assets/hero-bg-3.jpg';
-import heroBg4 from '../../assets/hero-bg-4.jpg';
-import heroBg5 from '../../assets/hero-bg-5.jpg';
-import heroBg6 from '../../assets/hero-bg-6.jpg';
+import heroProcess1 from '../../assets/hero-process-1.jpg';
+import heroProcess2 from '../../assets/hero-process-2.jpg';
+import heroProcess3 from '../../assets/hero-process-3.jpg';
+import heroProcess4 from '../../assets/hero-process-4.jpg';
+import heroProcess5 from '../../assets/hero-process-5.jpg';
 import '../../styles/landing.css';
 
 const heroSlides = [
-  { img: heroBg1, label: 'Central Distribution Warehouse' },
-  { img: heroBg2, label: 'Modern Architectural Storage Facility' },
-  { img: heroBg3, label: 'Organized Parcel Logistics Depot' },
-  { img: heroBg4, label: 'High-Bay Skylight Inventory Center' },
-  { img: heroBg5, label: 'Automated Logistics Terminal' },
-  { img: heroBg6, label: 'Grand Multi-Tier Pallet Depot' }
+  {
+    step: 'STAGE 01',
+    phase: 'Warehouse Storage & Inbound Intake',
+    label: 'High-Density Pallet Racks & Automated Ground Transport',
+    img: heroProcess1
+  },
+  {
+    step: 'STAGE 02',
+    phase: 'Inventory Auditing & Barcode Tracking',
+    label: 'Digital Handheld Scanning, SKU Audits & Item Verification',
+    img: heroProcess2
+  },
+  {
+    step: 'STAGE 03',
+    phase: 'Automated Fulfillment & Order Picking',
+    label: 'Robotic Conveyor Sorting, Packing Lines & AGV Movement',
+    img: heroProcess3
+  },
+  {
+    step: 'STAGE 04',
+    phase: 'Live Analytics & Operations Intelligence',
+    label: 'Elevated Control Room, Stock Heatmaps & Demand Analytics',
+    img: heroProcess4
+  },
+  {
+    step: 'STAGE 05',
+    phase: 'Depot Dispatch & Supply Chain Logistics',
+    label: 'High-Bay Staging, Fleet Loading & End-to-End Fulfillment',
+    img: heroProcess5
+  }
 ];
 
 export default function LandingPage() {
@@ -172,17 +195,25 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Slide Indicator Dots */}
-          <div className="hero-slideshow-dots" aria-label="Slideshow indicators">
-            {heroSlides.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className={`hero-dot ${idx === currentSlide ? 'active' : ''}`}
-                onClick={() => setCurrentSlide(idx)}
-                aria-label={`Jump to slide ${idx + 1}`}
-              />
-            ))}
+          {/* Workflow Process Stage Tracker */}
+          <div className="hero-process-tracker">
+            <div className="hero-process-pill">
+              <span className="process-pill-badge">{heroSlides[currentSlide]?.step}</span>
+              <span className="process-pill-title">{heroSlides[currentSlide]?.phase}</span>
+            </div>
+
+            <div className="hero-slideshow-dots" aria-label="Process workflow indicators">
+              {heroSlides.map((slide, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`hero-dot ${idx === currentSlide ? 'active' : ''}`}
+                  onClick={() => setCurrentSlide(idx)}
+                  title={`${slide.step}: ${slide.phase}`}
+                  aria-label={`Jump to ${slide.step}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
