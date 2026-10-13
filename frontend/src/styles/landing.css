@@ -12,16 +12,42 @@
   overflow-x: hidden;
 }
 
-/* Hero & Header Section with Background */
+/* Hero & Header Section with Automatic Slideshow */
 .landing-hero-wrapper {
   position: relative;
   min-height: 92vh;
   display: flex;
   flex-direction: column;
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
+  overflow: hidden;
+  background-color: #0b121e;
   color: #ffffff;
+}
+
+/* Multi-image Background Slideshow */
+.landing-hero-slideshow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1.0);
+  transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 5s ease-out;
+  will-change: opacity, transform;
+}
+
+.landing-hero-slide.active {
+  opacity: 1;
+  transform: scale(1.05);
+  z-index: 1;
 }
 
 /* Gradient overlay to ensure text contrast and match reference deep-blue atmosphere */
@@ -30,11 +56,12 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(10, 25, 47, 0.72) 0%,
-    rgba(11, 20, 38, 0.8) 50%,
-    rgba(9, 13, 22, 0.95) 100%
+    rgba(10, 25, 47, 0.70) 0%,
+    rgba(11, 20, 38, 0.80) 50%,
+    rgba(9, 13, 22, 0.94) 100%
   );
-  z-index: 1;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .landing-nav-container {
@@ -222,6 +249,7 @@
   max-width: 800px;
 }
 
+.hero-pill-badge,
 .hero-pill-tag {
   display: inline-flex;
   align-items: center;
@@ -237,6 +265,11 @@
   backdrop-filter: blur(8px);
   margin-bottom: 1.5rem;
   color: #e2e8f0;
+  width: fit-content;
+}
+
+.hero-pill-icon {
+  color: #818cf8;
 }
 
 .hero-headline {
@@ -264,6 +297,36 @@
   align-items: center;
   gap: 1.25rem;
   flex-wrap: wrap;
+}
+
+/* Slide Indicator Dots (Automatic Background Slideshow) */
+.hero-slideshow-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 2.25rem;
+  z-index: 10;
+}
+
+.hero-dot {
+  width: 28px;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.hero-dot:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.hero-dot.active {
+  background: #ffffff;
+  width: 48px;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.75);
 }
 
 /* Prominent White Hero Button (matching reference image 2) */
@@ -331,6 +394,21 @@
   align-items: center;
 }
 
+.section-eyebrow {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #818cf8;
+  margin-bottom: 0.75rem;
+}
+
+.about-left-col {
+  display: flex;
+  flex-direction: column;
+}
+
 .about-headline {
   font-size: 2.75rem;
   font-weight: 700;
@@ -338,11 +416,43 @@
   letter-spacing: -0.02em;
 }
 
+.about-right-col {
+  display: flex;
+  flex-direction: column;
+}
+
 .about-description {
   font-size: 1.15rem;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 400;
+}
+
+.about-stats-row {
+  display: flex;
+  gap: 2.5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.about-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-number {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
 }
 
 /* ==========================================================================
@@ -362,6 +472,7 @@
   margin-bottom: 3.5rem;
 }
 
+.services-title,
 .services-headline {
   font-size: 2.75rem;
   font-weight: 700;
@@ -370,9 +481,33 @@
   margin-bottom: 0.5rem;
 }
 
+.services-subtitle,
 .services-subhead {
   font-size: 1.05rem;
   color: #94a3b8;
+}
+
+.service-icon-wrap,
+.service-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #818cf8;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.service-card:hover .service-icon-wrap,
+.service-card:hover .service-icon-box {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-2px);
 }
 
 /* 3 Minimalist Service Cards matching reference image 3 */
@@ -489,6 +624,178 @@
   border-color: #4338ca;
 }
 
+/* ==========================================================================
+   Section 4: Direct Contact & Social Links (In-Line Bar)
+   ========================================================================== */
+.landing-contact-section {
+  background-color: #080c14;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4.5rem 2rem;
+  position: relative;
+}
+
+.landing-contact-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.landing-contact-header {
+  max-width: 680px;
+  margin-bottom: 2.75rem;
+}
+
+.contact-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  margin-bottom: 1rem;
+}
+
+.contact-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+.contact-desc {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+/* In-line bar displaying Email, Phone, X, and WhatsApp arranged together in line */
+.landing-contact-inline-bar {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: #101625;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 1.25rem 2.5rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.contact-inline-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.contact-inline-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+
+.contact-divider {
+  width: 1px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.contact-icon-bubble {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.email-bubble {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #818cf8;
+}
+
+.contact-inline-item:hover .email-bubble {
+  background: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.5);
+}
+
+.phone-bubble {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.contact-inline-item:hover .phone-bubble {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.5);
+}
+
+.x-bubble {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.contact-inline-item:hover .x-bubble {
+  background: #000000;
+  border-color: #ffffff;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+}
+
+.whatsapp-bubble {
+  background: rgba(37, 211, 102, 0.15);
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  color: #25d366;
+}
+
+.contact-inline-item:hover .whatsapp-bubble {
+  background: #25d366;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.5);
+}
+
+.contact-item-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.contact-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.contact-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-top: 1px;
+}
+
 /* Footer */
 .landing-footer {
   background-color: #07090e;
@@ -561,6 +868,21 @@
 
   .landing-services-section {
     padding: 3.5rem 1.5rem;
+  }
+
+  .landing-contact-section {
+    padding: 3.5rem 1.5rem;
+  }
+
+  .landing-contact-inline-bar {
+    padding: 1.25rem 1.5rem;
+    gap: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .contact-divider {
+    display: none;
   }
 }
 
