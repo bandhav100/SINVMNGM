@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sims-config
+  namespace: smart-inventory
+  labels:
+    app.kubernetes.io/name: smart-inventory
+data:
+  POSTGRES_DB: "smart_inventory_db"
+  POSTGRES_HOST: "postgres-service"
+  POSTGRES_PORT: "5432"
+  SERVER_PORT: "8081"
+  SPRING_PROFILES_ACTIVE: "prod"
+  JWT_EXPIRATION_MS: "86400000"
+  VITE_API_BASE_URL: "/api/v1"

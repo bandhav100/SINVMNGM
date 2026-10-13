@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smart-inventory
+  labels:
+    app.kubernetes.io/name: smart-inventory
+    app.kubernetes.io/part-of: sims
