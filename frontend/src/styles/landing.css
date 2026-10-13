@@ -947,24 +947,67 @@
 }
 
 @media (max-width: 768px) {
+  .landing-nav {
+    padding: 1rem 1.25rem;
+  }
+
   .landing-nav-links {
     display: none;
   }
 
+  /* Hide desktop buttons in mobile topbar to avoid colliding with brand emblem */
+  .btn-nav-signin,
+  .btn-nav-create {
+    display: none;
+  }
+
   .landing-mobile-toggle {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .landing-brand-name {
+    font-size: 1.15rem;
+  }
+
+  .landing-brand-subtitle {
+    font-size: 0.58rem;
+  }
+
+  .landing-logo-emblem {
+    width: 38px;
+    height: 38px;
   }
 
   .landing-hero-content {
-    padding: 3.5rem 1.5rem 4rem 1.5rem;
+    padding: 3rem 1.25rem 3.5rem 1.25rem;
   }
 
   .hero-headline {
-    font-size: 2.25rem;
+    font-size: 2.15rem;
+    line-height: 1.22;
   }
 
   .hero-subhead {
-    font-size: 1.05rem;
+    font-size: 1rem;
+    line-height: 1.55;
+    margin-bottom: 2rem;
+  }
+
+  .hero-cta-group {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.85rem;
+  }
+
+  .btn-hero-primary,
+  .btn-hero-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.5rem;
+    font-size: 1rem;
   }
 
   .services-grid {
@@ -972,26 +1015,128 @@
   }
 
   .landing-about-section {
-    padding: 3.5rem 1.5rem;
+    padding: 3.5rem 1.25rem;
+  }
+
+  .about-headline {
+    font-size: 2rem;
+    line-height: 1.25;
+  }
+
+  .about-description {
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+
+  .about-stats-row {
+    gap: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
   }
 
   .landing-services-section {
-    padding: 3.5rem 1.5rem;
+    padding: 3.5rem 1.25rem;
+  }
+
+  .services-headline,
+  .services-title {
+    font-size: 2rem;
   }
 
   .landing-contact-section {
-    padding: 3.5rem 1.5rem;
+    padding: 3.5rem 1.25rem;
   }
 
   .landing-contact-inline-bar {
-    padding: 1.25rem 1.5rem;
+    padding: 1.25rem 1.25rem;
     gap: 1rem;
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
   }
 
   .contact-divider {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-nav {
+    padding: 0.85rem 1rem;
+  }
+
+  .landing-brand-name {
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+  }
+
+  .landing-brand-subtitle {
+    font-size: 0.52rem;
+    letter-spacing: 0.15em;
+  }
+
+  .landing-logo-emblem {
+    width: 34px;
+    height: 34px;
+  }
+
+  .landing-hero-content {
+    padding: 2.5rem 1rem 3rem 1rem;
+  }
+
+  .hero-pill-badge,
+  .hero-pill-tag {
+    font-size: 0.68rem;
+    padding: 0.3rem 0.65rem;
+    letter-spacing: 0.05em;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .hero-headline {
+    font-size: 1.75rem;
+    line-height: 1.22;
+    margin-bottom: 1rem;
+  }
+
+  .hero-subhead {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.75rem;
+  }
+
+  .about-headline {
+    font-size: 1.65rem;
+  }
+
+  .about-stats-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .about-video-card {
+    border-radius: 12px;
+  }
+
+  .services-headline,
+  .services-title {
+    font-size: 1.65rem;
+  }
+
+  .contact-title {
+    font-size: 1.65rem;
+  }
+
+  .contact-inline-item {
+    width: 100%;
+  }
+
+  .landing-footer-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
   }
 }
 
