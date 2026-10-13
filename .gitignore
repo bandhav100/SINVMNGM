@@ -92,4 +92,6 @@ dump.rdb
 # AI & Assistant metadata
 .gemini/
 .agents/
+/gemini_generated_video_*.mp4
+
 

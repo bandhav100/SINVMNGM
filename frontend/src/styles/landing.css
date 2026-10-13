@@ -430,7 +430,7 @@
   max-width: 1280px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 1.15fr 1fr;
   gap: 3.5rem;
   align-items: center;
 }
@@ -455,30 +455,98 @@
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.02em;
-}
-
-.about-right-col {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 1.25rem;
 }
 
 .about-description {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 400;
+  margin-bottom: 1.75rem;
 }
 
 .about-stats-row {
   display: flex;
   gap: 2.5rem;
-  margin-top: 2rem;
   flex-wrap: wrap;
 }
 
 .about-stat-item {
   display: flex;
   flex-direction: column;
+}
+
+/* About Video Card (Platform Walkthrough on the Right) */
+.about-right-col {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.about-video-card {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 30px rgba(99, 102, 241, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.about-video-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 40px rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.about-video-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.video-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.video-dot.red {
+  background: #ef4444;
+}
+
+.video-dot.yellow {
+  background: #f59e0b;
+}
+
+.video-dot.green {
+  background: #10b981;
+}
+
+.video-title {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.03em;
+}
+
+.about-video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  overflow: hidden;
+}
+
+.about-video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .stat-number {

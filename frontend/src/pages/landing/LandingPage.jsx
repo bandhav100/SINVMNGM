@@ -22,6 +22,7 @@ import heroProcess2 from '../../assets/hero-process-2.jpg';
 import heroProcess3 from '../../assets/hero-process-3.jpg';
 import heroProcess4 from '../../assets/hero-process-4.jpg';
 import heroProcess5 from '../../assets/hero-process-5.jpg';
+import geminiVideo from '../../assets/gemini_generated_video.mp4';
 import '../../styles/landing.css';
 
 const heroSlides = [
@@ -175,7 +176,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===================================================================
-          Section 2: About / "What We Do"
+          Section 2: About / "What We Do" with Video at Right
           =================================================================== */}
       <section className="landing-about-section" id="about">
         <div className="landing-about-container">
@@ -184,9 +185,6 @@ export default function LandingPage() {
             <h2 className="about-headline">
               Simplifying Inventory Management for Modern Businesses
             </h2>
-          </div>
-
-          <div className="about-right-col">
             <p className="about-description">
               Stockwise Systems provides real-time visibility, automated low-stock warnings, purchase ordering, and sales order fulfillment so businesses can operate with speed, agility, and precision.
             </p>
@@ -202,6 +200,28 @@ export default function LandingPage() {
               <div className="about-stat-item">
                 <span className="stat-number">Multi-Tenant</span>
                 <span className="stat-label">Isolated Workspaces</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="about-right-col">
+            <div className="about-video-card">
+              <div className="about-video-topbar">
+                <div className="video-dot red" />
+                <div className="video-dot yellow" />
+                <div className="video-dot green" />
+                <span className="video-title">StockWise &bull; Live System Walkthrough</span>
+              </div>
+              <div className="about-video-wrapper">
+                <video
+                  src={geminiVideo}
+                  className="about-video-player"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controls
+                />
               </div>
             </div>
           </div>
