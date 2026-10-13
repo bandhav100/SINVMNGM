@@ -1,4 +1,4 @@
-# Smart Inventory Management System (SINVMNGM)
+# Smart Inventory Management System
 
 An enterprise-grade, full-stack Smart Inventory Management System built with **React 18 + Vite**, **Java 21 + Spring Boot 3**, and **PostgreSQL**. Designed for robust inventory tracking, purchase workflows, sales orders, automated stock alerts, business analytics, role-based access control (RBAC), and containerized deployments.
 
