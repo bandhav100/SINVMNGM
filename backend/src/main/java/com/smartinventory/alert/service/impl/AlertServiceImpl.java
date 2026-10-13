@@ -6,8 +6,10 @@ import com.smartinventory.alert.model.AlertSeverity;
 import com.smartinventory.alert.model.AlertType;
 import com.smartinventory.alert.service.AlertService;
 import com.smartinventory.common.dto.PageResponseDto;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import com.smartinventory.product.entity.Product;
 import com.smartinventory.product.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,16 +24,37 @@ import java.util.List;
 public class AlertServiceImpl implements AlertService {
 
     private final ProductRepository productRepository;
+    private final CurrentCompanyProvider currentCompanyProvider;
+
+    @Autowired
+    public AlertServiceImpl(
+            ProductRepository productRepository,
+            CurrentCompanyProvider currentCompanyProvider
+    ) {
+        this.productRepository = productRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
 
     public AlertServiceImpl(ProductRepository productRepository) {
-        this.productRepository = productRepository;
+        this(productRepository, null);
     }
 
     @Override
     public AlertSummaryDto getAlertSummary() {
-        long outOfStock = productRepository.countOutOfStock();
-        long lowStock = productRepository.countLowStock();
-        long reorderRequired = productRepository.countReorderRequired();
+        long outOfStock;
+        long lowStock;
+        long reorderRequired;
+
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            Long companyId = currentCompanyProvider.getCurrentCompanyId();
+            outOfStock = productRepository.countOutOfStock(companyId);
+            lowStock = productRepository.countLowStock(companyId);
+            reorderRequired = productRepository.countReorderRequired(companyId);
+        } else {
+            outOfStock = productRepository.countOutOfStock();
+            lowStock = productRepository.countLowStock();
+            reorderRequired = productRepository.countReorderRequired();
+        }
 
         return new AlertSummaryDto(
                 reorderRequired,
@@ -48,6 +71,8 @@ public class AlertServiceImpl implements AlertService {
             String search,
             Pageable pageable
     ) {
+        Long companyId = (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null)
+                ? currentCompanyProvider.getCurrentCompanyId() : null;
         boolean filterOutOfStockOnly = (alertType == AlertType.OUT_OF_STOCK) || (severity == AlertSeverity.CRITICAL);
         boolean filterLowStockOnly = (alertType == AlertType.LOW_STOCK) || (severity == AlertSeverity.WARNING);
         boolean hasSearch = search != null && !search.isBlank();
@@ -55,18 +80,34 @@ public class AlertServiceImpl implements AlertService {
 
         Page<Product> productPage;
 
-        if (filterOutOfStockOnly) {
-            productPage = hasSearch
-                    ? productRepository.searchOutOfStockProducts(query, pageable)
-                    : productRepository.findOutOfStockProducts(pageable);
-        } else if (filterLowStockOnly) {
-            productPage = hasSearch
-                    ? productRepository.searchLowStockProducts(query, pageable)
-                    : productRepository.findLowStockProducts(pageable);
+        if (companyId != null) {
+            if (filterOutOfStockOnly) {
+                productPage = hasSearch
+                        ? productRepository.searchOutOfStockProducts(companyId, query, pageable)
+                        : productRepository.findOutOfStockProducts(companyId, pageable);
+            } else if (filterLowStockOnly) {
+                productPage = hasSearch
+                        ? productRepository.searchLowStockProducts(companyId, query, pageable)
+                        : productRepository.findLowStockProducts(companyId, pageable);
+            } else {
+                productPage = hasSearch
+                        ? productRepository.searchAlertProducts(companyId, query, pageable)
+                        : productRepository.findAllAlertProducts(companyId, pageable);
+            }
         } else {
-            productPage = hasSearch
-                    ? productRepository.searchAlertProducts(query, pageable)
-                    : productRepository.findAllAlertProducts(pageable);
+            if (filterOutOfStockOnly) {
+                productPage = hasSearch
+                        ? productRepository.searchOutOfStockProducts(query, pageable)
+                        : productRepository.findOutOfStockProducts(pageable);
+            } else if (filterLowStockOnly) {
+                productPage = hasSearch
+                        ? productRepository.searchLowStockProducts(query, pageable)
+                        : productRepository.findLowStockProducts(pageable);
+            } else {
+                productPage = hasSearch
+                        ? productRepository.searchAlertProducts(query, pageable)
+                        : productRepository.findAllAlertProducts(pageable);
+            }
         }
 
         return PageResponseDto.fromPage(productPage, this::mapToAlertDto);
@@ -74,7 +115,10 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public List<LowStockAlertDto> getLowStockAlerts() {
-        List<Product> products = productRepository.findReorderRequiredProducts();
+        List<Product> products = (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null)
+                ? productRepository.findReorderRequiredProducts(currentCompanyProvider.getCurrentCompanyId())
+                : productRepository.findReorderRequiredProducts();
+
         List<LowStockAlertDto> result = new ArrayList<>();
         for (Product p : products) {
             result.add(mapToAlertDto(p));
@@ -99,13 +143,14 @@ public class AlertServiceImpl implements AlertService {
                 : "Product '" + p.getName() + "' has low stock (" + qty + " units remaining, reorder threshold is " + reorderLevel + ").";
 
         Instant createdAt = p.getUpdatedAt() != null ? p.getUpdatedAt() : (p.getCreatedAt() != null ? p.getCreatedAt() : Instant.now());
+        String categoryName = p.getCategory() != null ? p.getCategory().getName() : "Uncategorized";
 
         return new LowStockAlertDto(
                 id,
                 p.getId(),
                 p.getName(),
                 p.getSku(),
-                p.getCategory() != null ? p.getCategory().getName() : null,
+                categoryName,
                 qty,
                 reorderLevel,
                 type,

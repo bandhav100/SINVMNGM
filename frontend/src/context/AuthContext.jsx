@@ -77,6 +77,14 @@ export function AuthProvider({ children }) {
     return createdAdmin;
   };
 
+  const registerCompany = async (companyData) => {
+    const res = await authApi.registerCompany(companyData);
+    const createdAdmin = res.user || (await authApi.getCurrentUser());
+    setUser(createdAdmin);
+    setSetupRequired(false);
+    return createdAdmin;
+  };
+
   const logout = async () => {
     try {
       await authApi.logout();
@@ -104,6 +112,7 @@ export function AuthProvider({ children }) {
     refreshUser,
     login,
     setupAdmin,
+    registerCompany,
     logout,
     hasRole,
     isAuthenticated: !!user

@@ -1,5 +1,6 @@
 package com.smartinventory.inventory.entity;
 
+import com.smartinventory.company.entity.Company;
 import com.smartinventory.inventory.model.InventoryTransactionType;
 import com.smartinventory.product.entity.Product;
 import com.smartinventory.user.entity.User;
@@ -14,6 +15,10 @@ public class InventoryTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_id", nullable = false)
@@ -56,6 +61,11 @@ public class InventoryTransaction {
         if (this.createdAt == null) {
             this.createdAt = Instant.now();
         }
+        if (this.company == null) {
+            Company defComp = new Company();
+            defComp.setId(1L);
+            this.company = defComp;
+        }
     }
 
     public Long getId() {
@@ -64,6 +74,14 @@ public class InventoryTransaction {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public Product getProduct() {

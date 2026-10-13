@@ -5,6 +5,8 @@ import com.smartinventory.common.exception.DuplicateResourceException;
 import com.smartinventory.common.exception.LastActiveAdminException;
 import com.smartinventory.common.exception.ResourceNotFoundException;
 import com.smartinventory.security.service.DatabaseLockService;
+import com.smartinventory.company.entity.Company;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import com.smartinventory.user.dto.CreateUserRequestDto;
 import com.smartinventory.user.dto.UpdateUserRequestDto;
 import com.smartinventory.user.dto.UserResponseDto;
@@ -24,31 +26,53 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final DatabaseLockService databaseLockService;
+    private final CurrentCompanyProvider currentCompanyProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public UserServiceImpl(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            DatabaseLockService databaseLockService,
+            CurrentCompanyProvider currentCompanyProvider
+    ) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.databaseLockService = databaseLockService;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
 
     public UserServiceImpl(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             DatabaseLockService databaseLockService
     ) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.databaseLockService = databaseLockService;
+        this(userRepository, passwordEncoder, databaseLockService, null);
+    }
+
+    private User findUserOrThrow(Long id) {
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            return userRepository.findByIdAndCompanyId(id, currentCompanyProvider.getCurrentCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        }
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponseDto<UserResponseDto> getUsers(String search, Role role, Boolean active, Pageable pageable) {
         String cleanSearch = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
-        Page<User> page = userRepository.searchUsers(cleanSearch, role, active, pageable);
+        Long companyId = (currentCompanyProvider != null) ? currentCompanyProvider.getCurrentCompanyId() : null;
+        Page<User> page = (companyId != null)
+                ? userRepository.searchUsers(companyId, cleanSearch, role, active, pageable)
+                : userRepository.searchUsers(cleanSearch, role, active, pageable);
         return PageResponseDto.from(page.map(UserResponseDto::fromEntity));
     }
 
     @Override
     @Transactional(readOnly = true)
     public UserResponseDto getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        return UserResponseDto.fromEntity(user);
+        return UserResponseDto.fromEntity(findUserOrThrow(id));
     }
 
     @Override
@@ -66,6 +90,8 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = new User();
+        Company company = (currentCompanyProvider != null) ? currentCompanyProvider.getCurrentCompany() : null;
+        user.setCompany(company);
         user.setUsername(normalizedUsername);
         user.setEmail(normalizedEmail);
         user.setFullName(request.fullName().trim());
@@ -83,8 +109,7 @@ public class UserServiceImpl implements UserService {
         // Concurrency-safe: serialize role and admin modifications via transaction advisory lock
         databaseLockService.acquireUserMutationLock();
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        User user = findUserOrThrow(id);
 
         String normalizedEmail = request.email().trim().toLowerCase();
         if (!user.getEmail().equalsIgnoreCase(normalizedEmail) && userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
@@ -98,7 +123,10 @@ public class UserServiceImpl implements UserService {
 
         // Prevent demoting the last active administrator
         if (user.getRole() == Role.ADMIN && request.role() != Role.ADMIN) {
-            long activeAdmins = userRepository.countByRoleAndIsActiveTrue(Role.ADMIN);
+            Long companyId = (currentCompanyProvider != null) ? currentCompanyProvider.getCurrentCompanyId() : null;
+            long activeAdmins = (companyId != null)
+                    ? userRepository.countByCompanyIdAndRoleAndIsActiveTrue(companyId, Role.ADMIN)
+                    : userRepository.countByRoleAndIsActiveTrue(Role.ADMIN);
             if (activeAdmins <= 1 && user.isActive()) {
                 throw new LastActiveAdminException("Cannot demote the only remaining active Administrator");
             }
@@ -122,8 +150,7 @@ public class UserServiceImpl implements UserService {
         // Concurrency-safe: serialize role and admin modifications via transaction advisory lock
         databaseLockService.acquireUserMutationLock();
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        User user = findUserOrThrow(id);
 
         // Prevent self-deactivation
         if (user.getUsername().equalsIgnoreCase(currentUsername) && !active) {
@@ -132,7 +159,10 @@ public class UserServiceImpl implements UserService {
 
         // Prevent deactivating the last active administrator
         if (user.getRole() == Role.ADMIN && !active && user.isActive()) {
-            long activeAdmins = userRepository.countByRoleAndIsActiveTrue(Role.ADMIN);
+            Long companyId = (currentCompanyProvider != null) ? currentCompanyProvider.getCurrentCompanyId() : null;
+            long activeAdmins = (companyId != null)
+                    ? userRepository.countByCompanyIdAndRoleAndIsActiveTrue(companyId, Role.ADMIN)
+                    : userRepository.countByRoleAndIsActiveTrue(Role.ADMIN);
             if (activeAdmins <= 1) {
                 throw new LastActiveAdminException("Cannot deactivate the only remaining active Administrator");
             }

@@ -26,15 +26,25 @@ public interface SalesOrderItemRepository extends JpaRepository<SalesOrderItem, 
            "FROM SalesOrderItem soi " +
            "JOIN soi.salesOrder so " +
            "LEFT JOIN soi.product.category c " +
-           "WHERE so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
+           "WHERE (:companyId IS NULL OR so.company.id = :companyId) " +
+           "AND so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
            "AND so.completedAt >= :startInstant AND so.completedAt <= :endInstant " +
            "GROUP BY soi.product.id, soi.product.name, soi.product.sku, c.name " +
            "ORDER BY SUM(soi.quantity) DESC")
     List<FastMovingProductProjection> findFastMovingProducts(
+            @Param("companyId") Long companyId,
             @Param("startInstant") Instant startInstant,
             @Param("endInstant") Instant endInstant,
             Pageable pageable
     );
+
+    default List<FastMovingProductProjection> findFastMovingProducts(
+            Instant startInstant,
+            Instant endInstant,
+            Pageable pageable
+    ) {
+        return findFastMovingProducts(null, startInstant, endInstant, pageable);
+    }
 
     @Query("SELECT p.id AS productId, " +
            "p.name AS productName, " +
@@ -48,14 +58,24 @@ public interface SalesOrderItemRepository extends JpaRepository<SalesOrderItem, 
            "LEFT JOIN p.category c " +
            "LEFT JOIN SalesOrderItem soi ON soi.product = p " +
            "LEFT JOIN soi.salesOrder so ON so = soi.salesOrder " +
+           "WHERE (:companyId IS NULL OR p.company.id = :companyId) " +
            "GROUP BY p.id, p.name, p.sku, p.quantity, p.reorderLevel, c.name " +
            "ORDER BY COALESCE(SUM(CASE WHEN so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
            "AND so.completedAt >= :startInstant AND so.completedAt <= :endInstant THEN soi.quantity ELSE 0 END), 0) ASC, p.quantity DESC")
     List<ProductSalesPeriodProjection> findSlowMovingProducts(
+            @Param("companyId") Long companyId,
             @Param("startInstant") Instant startInstant,
             @Param("endInstant") Instant endInstant,
             Pageable pageable
     );
+
+    default List<ProductSalesPeriodProjection> findSlowMovingProducts(
+            Instant startInstant,
+            Instant endInstant,
+            Pageable pageable
+    ) {
+        return findSlowMovingProducts(null, startInstant, endInstant, pageable);
+    }
 
     @Query("SELECT COUNT(soi) > 0 FROM SalesOrderItem soi " +
            "JOIN soi.salesOrder so " +
@@ -71,19 +91,37 @@ public interface SalesOrderItemRepository extends JpaRepository<SalesOrderItem, 
 
     @Query("SELECT COALESCE(SUM(soi.quantity), 0) FROM SalesOrderItem soi " +
            "JOIN soi.salesOrder so " +
-           "WHERE so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
+           "WHERE (:companyId IS NULL OR so.company.id = :companyId) " +
+           "AND so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
            "AND so.completedAt >= :startInstant AND so.completedAt <= :endInstant")
     Long sumCompletedSalesUnits(
+            @Param("companyId") Long companyId,
             @Param("startInstant") Instant startInstant,
             @Param("endInstant") Instant endInstant
     );
 
+    default Long sumCompletedSalesUnits(
+            Instant startInstant,
+            Instant endInstant
+    ) {
+        return sumCompletedSalesUnits(null, startInstant, endInstant);
+    }
+
     @Query("SELECT COALESCE(SUM(soi.lineTotal), 0) FROM SalesOrderItem soi " +
            "JOIN soi.salesOrder so " +
-           "WHERE so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
+           "WHERE (:companyId IS NULL OR so.company.id = :companyId) " +
+           "AND so.status = com.smartinventory.sale.model.SalesOrderStatus.COMPLETED " +
            "AND so.completedAt >= :startInstant AND so.completedAt <= :endInstant")
     java.math.BigDecimal sumCompletedSalesRevenue(
+            @Param("companyId") Long companyId,
             @Param("startInstant") Instant startInstant,
             @Param("endInstant") Instant endInstant
     );
+
+    default java.math.BigDecimal sumCompletedSalesRevenue(
+            Instant startInstant,
+            Instant endInstant
+    ) {
+        return sumCompletedSalesRevenue(null, startInstant, endInstant);
+    }
 }

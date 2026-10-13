@@ -83,6 +83,7 @@ public class SecurityConfig {
                         .ignoringRequestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/setup-admin",
+                                "/api/v1/auth/register-company",
                                 "/api/v1/auth/setup-status",
                                 "/api/v1/auth/csrf",
                                 "/swagger-ui/**",
@@ -110,6 +111,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/setup-status",
                                 "/api/v1/auth/setup-admin",
+                                "/api/v1/auth/register-company",
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/csrf",
                                 "/swagger-ui/**",

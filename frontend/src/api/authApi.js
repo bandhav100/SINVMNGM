@@ -19,6 +19,11 @@ export const authApi = {
     return res.data;
   },
 
+  registerCompany: async (data) => {
+    const res = await apiClient.post('/auth/register-company', data);
+    return res.data;
+  },
+
   login: async (credentials) => {
     const res = await apiClient.post('/auth/login', credentials);
     return res.data;

@@ -27,8 +27,24 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldAlert,
-  ArrowUpDown
+  ArrowUpDown,
+  PieChart as PieChartIcon,
+  BarChart3
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend
+} from 'recharts';
+import ChartCard from '../../components/charts/ChartCard';
+import CustomTooltip from '../../components/charts/CustomTooltip';
 
 const COMMON_REASONS = [
   'Cycle Count Audit Discrepancy',
@@ -278,6 +294,30 @@ export default function InventoryPage() {
     }
   };
 
+  const [showCharts, setShowCharts] = useState(true);
+
+  // Inventory Chart Datasets
+  const healthyStockCount = Math.max(0, (summary?.totalProducts || 0) - (summary?.lowStockCount || 0) - (summary?.outOfStockCount || 0));
+  const inventoryHealthData = [
+    { name: 'Healthy Stock', value: healthyStockCount, color: '#10b981' },
+    { name: 'Low Stock Warning', value: Number(summary?.lowStockCount || 0), color: '#f59e0b' },
+    { name: 'Out of Stock', value: Number(summary?.outOfStockCount || 0), color: '#ef4444' }
+  ].filter((d) => d.value > 0);
+
+  const categoryVolumeMap = {};
+  stockItems.forEach((item) => {
+    const cName = item.categoryName || 'Uncategorized';
+    categoryVolumeMap[cName] = (categoryVolumeMap[cName] || 0) + (item.quantity || 0);
+  });
+  const categoryVolumeData = Object.entries(categoryVolumeMap)
+    .map(([name, units]) => ({
+      name: name.length > 14 ? `${name.substring(0, 12)}...` : name,
+      fullName: name,
+      units
+    }))
+    .sort((a, b) => b.units - a.units)
+    .slice(0, 6);
+
   return (
     <div className="page-container" style={{ padding: '1.5rem 2rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Page Header */}
@@ -304,6 +344,16 @@ export default function InventoryPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Button
+            variant="outline"
+            icon={PieChartIcon}
+            onClick={() => setShowCharts((prev) => !prev)}
+            style={{ fontSize: '0.85rem' }}
+            title="Toggle Visual Charts"
+          >
+            {showCharts ? 'Hide Charts' : 'Show Charts'}
+          </Button>
+
           <Button
             variant="outline"
             onClick={() => {
@@ -391,6 +441,73 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+
+      {/* Visual Analytics Charts Section */}
+      {showCharts && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: '1.25rem',
+            marginBottom: '1.5rem'
+          }}
+        >
+          <ChartCard
+            title="Overall Stock Health"
+            subtitle={`${summary?.totalProducts || 0} Total Products • ${summary?.totalStockUnits || 0} Units`}
+            icon={PieChartIcon}
+            iconColor="#10b981"
+          >
+            {inventoryHealthData.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No stock data available for chart
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Tooltip content={<CustomTooltip valueSuffix=" products" />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  <Pie
+                    data={inventoryHealthData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {inventoryHealthData.map((entry, index) => (
+                      <Cell key={`cell-inv-health-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          <ChartCard
+            title="Stock Units by Category"
+            subtitle="Current inventory units distribution per category"
+            icon={BarChart3}
+            iconColor="#3b82f6"
+          >
+            {categoryVolumeData.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No category inventory data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={categoryVolumeData} margin={{ top: 10, right: 10, left: 10, bottom: 25 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip content={<CustomTooltip valueSuffix=" units" />} />
+                  <Bar dataKey="units" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+        </div>
+      )}
 
       {/* View Switcher Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--color-border)', marginBottom: '1.25rem' }}>

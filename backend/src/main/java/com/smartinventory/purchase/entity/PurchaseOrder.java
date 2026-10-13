@@ -1,5 +1,6 @@
 package com.smartinventory.purchase.entity;
 
+import com.smartinventory.company.entity.Company;
 import com.smartinventory.purchase.model.PurchaseOrderStatus;
 import com.smartinventory.supplier.entity.Supplier;
 import com.smartinventory.user.entity.User;
@@ -19,7 +20,11 @@ public class PurchaseOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_number", nullable = false, unique = true, length = 50)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
+    @Column(name = "order_number", nullable = false, length = 50)
     private String orderNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -82,6 +87,11 @@ public class PurchaseOrder {
         if (this.totalAmount == null) {
             this.totalAmount = BigDecimal.ZERO;
         }
+        if (this.company == null) {
+            Company defComp = new Company();
+            defComp.setId(1L);
+            this.company = defComp;
+        }
     }
 
     @PreUpdate
@@ -111,6 +121,14 @@ public class PurchaseOrder {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public String getOrderNumber() {

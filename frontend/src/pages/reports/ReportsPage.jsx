@@ -30,8 +30,11 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Download,
+  Printer
 } from 'lucide-react';
+import { downloadCSV, printReport } from '../../utils/exportUtils';
 
 export default function ReportsPage() {
   const { user } = useAuth();
@@ -244,6 +247,77 @@ export default function ReportsPage() {
     }
   };
 
+  const handleDownloadReport = () => {
+    if (!reportData?.items?.content || reportData.items.content.length === 0) {
+      alert('No data available to download for the current report view.');
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    let filename = `SIMS_${activeTab.toUpperCase()}_Report_${todayStr}`;
+    let headers = [];
+    const rows = reportData.items.content;
+
+    switch (activeTab) {
+      case 'inventory':
+        headers = [
+          { label: 'Product Name', key: 'productName' },
+          { label: 'SKU', key: 'sku' },
+          { label: 'Category', key: 'categoryName', formatter: v => v || 'Uncategorized' },
+          { label: 'Current Stock', key: 'currentStock' },
+          { label: 'Reorder Level', key: 'reorderLevel' },
+          { label: 'Unit Price (INR)', key: 'price', formatter: v => Number(v || 0).toFixed(2) },
+          { label: 'Stock Valuation (INR)', key: 'price', formatter: (v, r) => (Number(v || 0) * Number(r.currentStock || 0)).toFixed(2) }
+        ];
+        break;
+      case 'sales':
+        headers = [
+          { label: 'Order Number', key: 'orderNumber' },
+          { label: 'Completed Date', key: 'completedAt', formatter: v => v ? new Date(v).toLocaleString() : '' },
+          { label: 'Customer Name', key: 'customerName', formatter: v => v || 'Walk-in Customer' },
+          { label: 'Units Sold', key: 'totalUnits' },
+          { label: 'Total Revenue (INR)', key: 'totalAmount', formatter: v => Number(v || 0).toFixed(2) },
+          { label: 'Status', key: 'status' }
+        ];
+        break;
+      case 'purchases':
+        headers = [
+          { label: 'PO Number', key: 'orderNumber' },
+          { label: 'Order Date', key: 'orderDate', formatter: v => v ? new Date(v).toLocaleDateString() : '' },
+          { label: 'Supplier Name', key: 'supplierName', formatter: v => v || 'N/A' },
+          { label: 'Status', key: 'status' },
+          { label: 'Expected Date', key: 'expectedDeliveryDate', formatter: v => v ? new Date(v).toLocaleDateString() : 'N/A' },
+          { label: 'Total Cost (INR)', key: 'totalAmount', formatter: v => Number(v || 0).toFixed(2) }
+        ];
+        break;
+      case 'movements':
+        headers = [
+          { label: 'Timestamp', key: 'createdAt', formatter: v => v ? new Date(v).toLocaleString() : '' },
+          { label: 'Product Name', key: 'productName' },
+          { label: 'SKU', key: 'sku' },
+          { label: 'Transaction Type', key: 'transactionType' },
+          { label: 'Quantity Delta', key: 'quantityChange' },
+          { label: 'Remaining Stock', key: 'resultingStock' },
+          { label: 'Reference Document', key: 'referenceNumber', formatter: v => v || 'N/A' }
+        ];
+        break;
+      case 'valuation':
+        headers = [
+          { label: 'Product Name', key: 'productName' },
+          { label: 'SKU', key: 'sku' },
+          { label: 'Category', key: 'categoryName', formatter: v => v || 'Uncategorized' },
+          { label: 'Units In Stock', key: 'currentStock' },
+          { label: 'Unit Selling Price (INR)', key: 'sellingPrice', formatter: v => Number(v || 0).toFixed(2) },
+          { label: 'Total Retail Valuation (INR)', key: 'potentialRetailValue', formatter: v => Number(v || 0).toFixed(2) }
+        ];
+        break;
+      default:
+        break;
+    }
+
+    downloadCSV(filename, headers, rows);
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -272,6 +346,30 @@ export default function ReportsPage() {
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleDownloadReport}
+            disabled={isLoading || !reportData?.items?.content?.length}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+            title="Download report data as CSV file"
+          >
+            <Download className="w-4 h-4" />
+            Download CSV
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={printReport}
+            disabled={isLoading}
+            className="flex items-center gap-2 text-slate-700"
+            title="Print report or save to PDF"
+          >
+            <Printer className="w-4 h-4" />
+            Print / PDF
           </Button>
         </div>
       </div>

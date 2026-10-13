@@ -66,6 +66,25 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
     }
 
+    @PostMapping("/register-company")
+    @Operation(summary = "Register new company workspace", description = "Creates a new company workspace and its initial master administrator")
+    public ResponseEntity<AuthResponseDto> registerCompany(
+            @Valid @RequestBody com.smartinventory.auth.dto.RegisterCompanyRequestDto request,
+            @RequestHeader(value = "X-Client-Type", required = false) String clientType,
+            HttpServletResponse response
+    ) {
+        AuthResponseDto authResult = authService.registerCompany(request);
+        String token = authResult.token();
+
+        setJwtCookie(response, token);
+        response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+        boolean isApiClient = "api".equalsIgnoreCase(clientType);
+        AuthResponseDto responseBody = isApiClient ? authResult : AuthResponseDto.of(null, authResult.user());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
+    }
+
     @PostMapping("/login")
     @Operation(summary = "User login", description = "Authenticates user credentials and issues a JWT token")
     public ResponseEntity<AuthResponseDto> login(

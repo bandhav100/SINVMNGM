@@ -68,7 +68,7 @@ class SystemSettingsServiceTest {
         SystemSettingsDto result = systemSettingsService.getSettings();
 
         assertThat(result.companyName()).isEqualTo("Smart Inventory Systems");
-        assertThat(result.currency()).isEqualTo("USD");
+        assertThat(result.currency()).isEqualTo("INR");
         assertThat(result.timezone()).isEqualTo("UTC");
         assertThat(result.defaultReorderThreshold()).isEqualTo(10);
     }

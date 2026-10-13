@@ -5,6 +5,8 @@ import com.smartinventory.category.repository.CategoryRepository;
 import com.smartinventory.common.dto.PageResponseDto;
 import com.smartinventory.common.exception.DuplicateResourceException;
 import com.smartinventory.common.exception.ResourceNotFoundException;
+import com.smartinventory.company.entity.Company;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import com.smartinventory.product.dto.ProductRequestDto;
 import com.smartinventory.product.dto.ProductResponseDto;
 import com.smartinventory.product.entity.Product;
@@ -20,20 +22,46 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final CurrentCompanyProvider currentCompanyProvider;
 
-    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductServiceImpl(
+            ProductRepository productRepository,
+            CategoryRepository categoryRepository,
+            CurrentCompanyProvider currentCompanyProvider
+    ) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
+
+    private Product findProductOrThrow(Long id) {
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            return productRepository.findByIdAndCompanyId(id, currentCompanyProvider.getCurrentCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        }
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     @Override
     public ProductResponseDto createProduct(ProductRequestDto request) {
         String trimmedSku = request.sku().trim();
-        if (productRepository.existsBySkuIgnoreCase(trimmedSku)) {
-            throw new DuplicateResourceException("Product with SKU '" + trimmedSku + "' already exists");
+
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            Long companyId = currentCompanyProvider.getCurrentCompanyId();
+            if (productRepository.existsByCompanyIdAndSkuIgnoreCase(companyId, trimmedSku)) {
+                throw new DuplicateResourceException("Product with SKU '" + trimmedSku + "' already exists");
+            }
+        } else {
+            if (productRepository.existsBySkuIgnoreCase(trimmedSku)) {
+                throw new DuplicateResourceException("Product with SKU '" + trimmedSku + "' already exists");
+            }
         }
 
+        Company company = (currentCompanyProvider != null) ? currentCompanyProvider.getCurrentCompany() : null;
+
         Product product = new Product();
+        product.setCompany(company);
         product.setName(request.name().trim());
         product.setSku(trimmedSku);
         product.setDescription(request.description() != null ? request.description().trim() : null);
@@ -54,31 +82,47 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public ProductResponseDto getProductById(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        return ProductResponseDto.fromEntity(product);
+        return ProductResponseDto.fromEntity(findProductOrThrow(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponseDto<ProductResponseDto> getProducts(String search, Pageable pageable) {
         Page<Product> page;
-        if (search != null && !search.trim().isEmpty()) {
-            page = productRepository.searchProducts(search.trim(), pageable);
+        boolean hasSearch = (search != null && !search.trim().isEmpty());
+
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            Long companyId = currentCompanyProvider.getCurrentCompanyId();
+            if (hasSearch) {
+                page = productRepository.searchProducts(companyId, search.trim(), pageable);
+            } else {
+                page = productRepository.findAllByCompanyId(companyId, pageable);
+            }
         } else {
-            page = productRepository.findAll(pageable);
+            if (hasSearch) {
+                page = productRepository.searchProducts(search.trim(), pageable);
+            } else {
+                page = productRepository.findAll(pageable);
+            }
         }
+
         return PageResponseDto.fromPage(page.map(ProductResponseDto::fromEntity));
     }
 
     @Override
     public ProductResponseDto updateProduct(Long id, ProductRequestDto request) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-
+        Product product = findProductOrThrow(id);
         String trimmedSku = request.sku().trim();
-        if (productRepository.existsBySkuIgnoreCaseAndIdNot(trimmedSku, id)) {
-            throw new DuplicateResourceException("Product with SKU '" + trimmedSku + "' already exists on another product");
+
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            Long companyId = currentCompanyProvider.getCurrentCompanyId();
+            if (productRepository.existsByCompanyIdAndSkuIgnoreCaseAndIdNot(companyId, trimmedSku, id)) {
+                throw new DuplicateResourceException("Product with SKU '" + trimmedSku + "' already exists on another product");
+            }
+        } else {
+            if (productRepository.existsBySkuIgnoreCaseAndIdNot(trimmedSku, id)) {
+                throw new DuplicateResourceException("Product with SKU '" + trimmedSku + "' already exists on another product");
+            }
         }
 
         product.setName(request.name().trim());
@@ -98,14 +142,13 @@ public class ProductServiceImpl implements ProductService {
             product.setCategory(null);
         }
 
-        Product updatedProduct = productRepository.save(product);
-        return ProductResponseDto.fromEntity(updatedProduct);
+        Product saved = productRepository.save(product);
+        return ProductResponseDto.fromEntity(saved);
     }
 
     @Override
     public void deleteProduct(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        Product product = findProductOrThrow(id);
         productRepository.delete(product);
     }
 }

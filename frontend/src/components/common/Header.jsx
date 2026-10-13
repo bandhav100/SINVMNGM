@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Database, ShieldCheck, LogOut, User as UserIcon } from 'lucide-react';
+import { settingsApi } from '../../api/settingsApi';
+import { Database, LogOut, User as UserIcon, Menu } from 'lucide-react';
 import Badge from './Badge';
 
 const roleBadgeVariant = {
@@ -18,55 +19,70 @@ const roleDisplayName = {
   SALES_STAFF: 'Sales Staff'
 };
 
-export default function Header() {
+export default function Header({ onToggleSidebar }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [companyName, setCompanyName] = useState('Smart Inventory Management System');
+
+  useEffect(() => {
+    let isMounted = true;
+    if (user?.role === 'ADMIN') {
+      settingsApi.getSettings()
+        .then((data) => {
+          if (isMounted && data?.companyName) {
+            setCompanyName(data.companyName);
+          }
+        })
+        .catch(() => {
+          // Gracefully fallback to default title
+        });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (
     <header className="header">
-      <div className="header-title-container">
-        <h2 className="page-title">Smart Inventory Management System</h2>
+      <div className="header-left">
+        <button
+          className="sidebar-toggle-btn"
+          onClick={onToggleSidebar}
+          aria-label="Toggle navigation menu"
+          title="Toggle Navigation"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="header-title-container">
+          <h2 className="page-title">{companyName}</h2>
+          <span className="page-subtitle">Real-Time Enterprise Operations</span>
+        </div>
       </div>
 
-      <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: 'var(--color-success)', backgroundColor: 'var(--color-success-light)', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-success-border)' }}>
-          <Database size={14} />
-          <span>PostgreSQL Active</span>
+      <div className="header-actions">
+        <div className="db-status-pill" title="Connected to PostgreSQL Database">
+          <span className="db-pulse-dot" />
+          <Database size={13} className="db-icon" />
+          <span className="db-status-text">PostgreSQL Active</span>
         </div>
 
         {user && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            paddingLeft: '0.75rem',
-            borderLeft: '1px solid var(--border-color, #e2e8f0)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--color-primary-light, #eff6ff)',
-                color: 'var(--color-primary, #2563eb)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '600',
-                fontSize: '0.85rem'
-              }}>
-                <UserIcon size={16} />
+          <div className="user-profile-section">
+            <div className="user-info-pill">
+              <div className="user-avatar">
+                <UserIcon size={15} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2' }}>
-                <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+              <div className="user-meta">
+                <span className="user-name">
                   {user.fullName || user.username}
                 </span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                <span className="user-role-badge">
                   <Badge variant={roleBadgeVariant[user.role] || 'info'}>
                     {roleDisplayName[user.role] || user.role}
                   </Badge>
@@ -76,32 +92,12 @@ export default function Header() {
 
             <button
               onClick={handleLogout}
+              className="sign-out-btn"
               title="Sign Out"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                padding: '0.4rem 0.75rem',
-                borderRadius: '6px',
-                border: '1px solid var(--border-color, #e2e8f0)',
-                backgroundColor: '#ffffff',
-                color: '#ef4444',
-                fontSize: '0.8125rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#fef2f2';
-                e.currentTarget.style.borderColor = '#fca5a5';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
-                e.currentTarget.style.borderColor = 'var(--border-color, #e2e8f0)';
-              }}
+              aria-label="Sign Out"
             >
               <LogOut size={14} />
-              <span>Sign Out</span>
+              <span className="sign-out-text">Sign Out</span>
             </button>
           </div>
         )}

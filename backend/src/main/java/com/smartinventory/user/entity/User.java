@@ -1,5 +1,6 @@
 package com.smartinventory.user.entity;
 
+import com.smartinventory.company.entity.Company;
 import com.smartinventory.user.model.Role;
 import jakarta.persistence.*;
 import java.time.Instant;
@@ -11,6 +12,10 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
     @Column(nullable = false, length = 50)
     private String username;
@@ -49,11 +54,26 @@ public class User {
         this.isActive = isActive;
     }
 
+    public User(Company company, String username, String email, String passwordHash, String fullName, Role role, boolean isActive) {
+        this.company = company;
+        this.username = username;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.fullName = fullName;
+        this.role = role;
+        this.isActive = isActive;
+    }
+
     @PrePersist
     protected void onCreate() {
         Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.company == null) {
+            Company defComp = new Company();
+            defComp.setId(1L);
+            this.company = defComp;
+        }
     }
 
     @PreUpdate
@@ -67,6 +87,14 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public String getUsername() {

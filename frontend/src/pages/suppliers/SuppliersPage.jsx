@@ -20,8 +20,25 @@ import {
   X,
   Phone,
   Mail,
-  UserCheck
+  UserCheck,
+  PieChart as PieChartIcon,
+  BarChart3,
+  Building
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend
+} from 'recharts';
+import ChartCard from '../../components/charts/ChartCard';
+import CustomTooltip from '../../components/charts/CustomTooltip';
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState([]);
@@ -170,9 +187,30 @@ export default function SuppliersPage() {
     }
   };
 
-  // Summary counts
+  const [showCharts, setShowCharts] = useState(true);
+
+  // Summary counts & chart datasets
   const activeCount = suppliers.filter((s) => s.active).length;
   const inactiveCount = suppliers.filter((s) => !s.active).length;
+
+  const supplierStatusData = [
+    { name: 'Active Vendors', value: activeCount, color: '#10b981' },
+    { name: 'Inactive Vendors', value: inactiveCount, color: '#94a3b8' }
+  ].filter((d) => d.value > 0);
+
+  const cityCountMap = {};
+  suppliers.forEach((s) => {
+    const city = s.city ? s.city.trim() : (s.address ? s.address.split(',')[0].trim() : 'Local');
+    cityCountMap[city] = (cityCountMap[city] || 0) + 1;
+  });
+  const supplierCityData = Object.entries(cityCountMap)
+    .map(([city, count]) => ({
+      name: city.length > 14 ? `${city.substring(0, 12)}...` : city,
+      fullName: city,
+      count
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
 
   return (
     <div>
@@ -235,6 +273,73 @@ export default function SuppliersPage() {
         </div>
       </div>
 
+      {/* Visual Analytics Charts Section */}
+      {showCharts && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: '1.25rem',
+            marginBottom: '1.5rem'
+          }}
+        >
+          <ChartCard
+            title="Vendor Operational Status"
+            subtitle={`${suppliers.length} vendors on current page`}
+            icon={PieChartIcon}
+            iconColor="#10b981"
+          >
+            {supplierStatusData.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No supplier data available for chart
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Tooltip content={<CustomTooltip valueSuffix=" suppliers" />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  <Pie
+                    data={supplierStatusData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {supplierStatusData.map((entry, index) => (
+                      <Cell key={`cell-sup-status-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          <ChartCard
+            title="Geographic Hub Distribution"
+            subtitle="Suppliers distributed by location / regional base"
+            icon={Building}
+            iconColor="#6366f1"
+          >
+            {supplierCityData.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No regional data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={supplierCityData} margin={{ top: 10, right: 10, left: 10, bottom: 25 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip content={<CustomTooltip valueSuffix=" vendors" />} />
+                  <Bar dataKey="count" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+        </div>
+      )}
+
       {/* Main Card */}
       <div className="card">
         <div className="card-header">
@@ -272,6 +377,14 @@ export default function SuppliersPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Button
+              variant="outline"
+              icon={PieChartIcon}
+              onClick={() => setShowCharts((prev) => !prev)}
+              title="Toggle Visual Charts"
+            >
+              {showCharts ? 'Hide Charts' : 'Show Charts'}
+            </Button>
             <Button
               variant="secondary"
               icon={RefreshCw}

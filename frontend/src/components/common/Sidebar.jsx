@@ -13,7 +13,9 @@ import {
   Bell,
   FileBarChart,
   Users,
-  Settings
+  Settings,
+  X,
+  Server
 } from 'lucide-react';
 
 const allNavItems = [
@@ -96,7 +98,7 @@ const allNavItems = [
   }
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuth();
   const userRole = user?.role;
 
@@ -111,20 +113,30 @@ export default function Sidebar() {
   const adminAndInsights = allNavItems.slice(6).filter(isItemVisible);
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
-        <div className="brand-logo">
-          <Boxes size={20} />
+        <div className="brand-wrapper">
+          <div className="brand-logo">
+            <Boxes size={20} />
+          </div>
+          <div className="brand-meta">
+            <h1 className="brand-text">SIMS</h1>
+            <span className="brand-badge-pill">Enterprise</span>
+          </div>
         </div>
-        <div>
-          <h1 className="brand-text">SIMS</h1>
-          <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Smart Inventory</p>
-        </div>
+
+        <button
+          className="sidebar-close-btn"
+          onClick={onClose}
+          aria-label="Close navigation sidebar"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       <nav className="sidebar-nav">
         {coreOperations.length > 0 && (
-          <>
+          <div className="nav-group">
             <span className="nav-section-title">Core Operations</span>
             {coreOperations.map((item) => {
               const Icon = item.icon;
@@ -134,22 +146,20 @@ export default function Sidebar() {
                   to={item.path}
                   className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 >
-                  <Icon size={18} />
-                  <span>{item.label}</span>
+                  <Icon size={18} className="nav-icon" />
+                  <span className="nav-label">{item.label}</span>
                   {item.phase !== 'Live' && (
                     <span className="nav-badge">{item.phase}</span>
                   )}
                 </NavLink>
               );
             })}
-          </>
+          </div>
         )}
 
         {adminAndInsights.length > 0 && (
-          <>
-            <span className="nav-section-title" style={{ marginTop: '1rem' }}>
-              Intelligence & Admin
-            </span>
+          <div className="nav-group" style={{ marginTop: '0.75rem' }}>
+            <span className="nav-section-title">Intelligence & Admin</span>
             {adminAndInsights.map((item) => {
               const Icon = item.icon;
               return (
@@ -158,21 +168,24 @@ export default function Sidebar() {
                   to={item.path}
                   className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 >
-                  <Icon size={18} />
-                  <span>{item.label}</span>
+                  <Icon size={18} className="nav-icon" />
+                  <span className="nav-label">{item.label}</span>
                   {item.phase !== 'Live' && (
                     <span className="nav-badge">{item.phase}</span>
                   )}
                 </NavLink>
               );
             })}
-          </>
+          </div>
         )}
       </nav>
 
       <div className="sidebar-footer">
-        <span>Spring Boot 4.1.1</span>
-        <span>v1.0.0</span>
+        <div className="system-status-indicator">
+          <Server size={14} className="status-icon" />
+          <span className="status-label">Spring Boot 4.1.1</span>
+        </div>
+        <span className="version-tag">v1.0.0</span>
       </div>
     </aside>
   );

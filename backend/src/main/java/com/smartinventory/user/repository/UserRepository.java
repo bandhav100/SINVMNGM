@@ -26,12 +26,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByRole(Role role);
 
-    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.isActive = true")
-    long countByRoleAndIsActiveTrue(@Param("role") Role role);
+    @Query("SELECT COUNT(u) FROM User u WHERE (:companyId IS NULL OR u.company.id = :companyId) AND u.role = :role AND u.isActive = true")
+    long countByCompanyIdAndRoleAndIsActiveTrue(@Param("companyId") Long companyId, @Param("role") Role role);
+
+    default long countByRoleAndIsActiveTrue(Role role) {
+        return countByCompanyIdAndRoleAndIsActiveTrue(null, role);
+    }
+
+    Optional<User> findByIdAndCompanyId(Long id, Long companyId);
 
     @Query("""
         SELECT u FROM User u
-        WHERE (:query IS NULL OR :query = '' 
+        WHERE (:companyId IS NULL OR u.company.id = :companyId)
+          AND (:query IS NULL OR :query = '' 
                OR LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%'))
                OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :query, '%'))
                OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')))
@@ -39,9 +46,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
           AND (:isActive IS NULL OR u.isActive = :isActive)
     """)
     Page<User> searchUsers(
+            @Param("companyId") Long companyId,
             @Param("query") String query,
             @Param("role") Role role,
             @Param("isActive") Boolean isActive,
             Pageable pageable
     );
+
+    default Page<User> searchUsers(
+            String query,
+            Role role,
+            Boolean isActive,
+            Pageable pageable
+    ) {
+        return searchUsers(null, query, role, isActive, pageable);
+    }
 }

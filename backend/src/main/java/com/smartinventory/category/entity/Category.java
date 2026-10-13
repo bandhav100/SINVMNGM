@@ -1,5 +1,6 @@
 package com.smartinventory.category.entity;
 
+import com.smartinventory.company.entity.Company;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.Objects;
@@ -11,6 +12,10 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
     @Column(name = "name", nullable = false, length = 100)
     private String name;
@@ -33,6 +38,12 @@ public class Category {
         this.description = description;
     }
 
+    public Category(Company company, String name, String description) {
+        this.company = company;
+        this.name = name;
+        this.description = description;
+    }
+
     @PrePersist
     protected void onCreate() {
         Instant now = Instant.now();
@@ -41,6 +52,11 @@ public class Category {
         }
         if (this.updatedAt == null) {
             this.updatedAt = now;
+        }
+        if (this.company == null) {
+            Company defComp = new Company();
+            defComp.setId(1L);
+            this.company = defComp;
         }
     }
 
@@ -55,6 +71,14 @@ public class Category {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public String getName() {

@@ -4,6 +4,8 @@ import com.smartinventory.common.dto.PageResponseDto;
 import com.smartinventory.common.exception.InsufficientStockException;
 import com.smartinventory.common.exception.InvalidStateTransitionException;
 import com.smartinventory.common.exception.ResourceNotFoundException;
+import com.smartinventory.company.entity.Company;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import com.smartinventory.inventory.entity.InventoryTransaction;
 import com.smartinventory.inventory.model.InventoryTransactionType;
 import com.smartinventory.inventory.repository.InventoryTransactionRepository;
@@ -17,10 +19,10 @@ import com.smartinventory.sale.repository.SalesOrderRepository;
 import com.smartinventory.sale.service.SaleService;
 import com.smartinventory.user.entity.User;
 import com.smartinventory.user.repository.UserRepository;
-import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +30,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,17 +40,29 @@ public class SaleServiceImpl implements SaleService {
     private final ProductRepository productRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
     private final UserRepository userRepository;
+    private final CurrentCompanyProvider currentCompanyProvider;
 
     public SaleServiceImpl(
             SalesOrderRepository salesOrderRepository,
             ProductRepository productRepository,
             InventoryTransactionRepository inventoryTransactionRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CurrentCompanyProvider currentCompanyProvider
     ) {
         this.salesOrderRepository = salesOrderRepository;
         this.productRepository = productRepository;
         this.inventoryTransactionRepository = inventoryTransactionRepository;
         this.userRepository = userRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
+
+    private SalesOrder findOrderOrThrow(Long id) {
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            return salesOrderRepository.findByIdAndCompanyId(id, currentCompanyProvider.getCurrentCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
+        }
+        return salesOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
     }
 
     @Override
@@ -61,6 +73,8 @@ public class SaleServiceImpl implements SaleService {
         User user = findUserByUsername(currentUsername);
 
         SalesOrder order = new SalesOrder();
+        Company company = currentCompanyProvider != null ? currentCompanyProvider.getCurrentCompany() : null;
+        order.setCompany(company);
         order.setOrderNumber(generateOrderNumber());
         order.setCustomerName(request.customerName());
         order.setCustomerContact(request.customerContact());
@@ -86,12 +100,15 @@ public class SaleServiceImpl implements SaleService {
         Specification<SalesOrder> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+                predicates.add(cb.equal(root.get("company").get("id"), currentCompanyProvider.getCurrentCompanyId()));
+            }
+
             if (search != null && !search.isBlank()) {
                 String pattern = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("orderNumber")), pattern),
-                        cb.like(cb.lower(cb.coalesce(root.get("customerName"), "")), pattern),
-                        cb.like(cb.lower(cb.coalesce(root.get("customerContact"), "")), pattern)
+                        cb.like(cb.lower(root.get("customerName")), pattern)
                 ));
             }
 
@@ -100,13 +117,11 @@ public class SaleServiceImpl implements SaleService {
             }
 
             if (startDate != null) {
-                Instant startInstant = startDate.atStartOfDay(ZoneOffset.UTC).toInstant();
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startInstant));
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startDate.atStartOfDay().toInstant(java.time.ZoneOffset.UTC)));
             }
 
             if (endDate != null) {
-                Instant endInstant = endDate.atTime(LocalTime.MAX).atZone(ZoneOffset.UTC).toInstant();
-                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endInstant));
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endDate.plusDays(1).atStartOfDay().toInstant(java.time.ZoneOffset.UTC)));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -119,16 +134,13 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional(readOnly = true)
     public SalesOrderResponseDto getSaleOrderById(Long id) {
-        SalesOrder order = salesOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
-        return SalesOrderResponseDto.fromEntity(order);
+        return SalesOrderResponseDto.fromEntity(findOrderOrThrow(id));
     }
 
     @Override
     @Transactional
     public SalesOrderResponseDto updateSaleOrder(Long id, UpdateSalesOrderRequestDto request, String currentUsername) {
-        SalesOrder order = salesOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
+        SalesOrder order = findOrderOrThrow(id);
 
         if (order.getStatus() != SalesOrderStatus.DRAFT) {
             throw new InvalidStateTransitionException("Only DRAFT sales orders can be updated. Current status is " + order.getStatus());
@@ -151,8 +163,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public void deleteSaleOrder(Long id) {
-        SalesOrder order = salesOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
+        SalesOrder order = findOrderOrThrow(id);
 
         if (order.getStatus() != SalesOrderStatus.DRAFT) {
             throw new InvalidStateTransitionException("Only DRAFT sales orders can be deleted. Current status is " + order.getStatus());
@@ -165,8 +176,14 @@ public class SaleServiceImpl implements SaleService {
     @Transactional
     public SalesOrderResponseDto completeSaleOrder(Long id, String currentUsername) {
         // 1. Lock the sales order with pessimistic write lock
-        SalesOrder order = salesOrderRepository.findByIdWithLock(id)
-                .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
+        SalesOrder order;
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            order = salesOrderRepository.findByIdAndCompanyIdWithLock(id, currentCompanyProvider.getCurrentCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
+        } else {
+            order = salesOrderRepository.findByIdWithLock(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
+        }
 
         // 2. Validate current state
         if (order.getStatus() == SalesOrderStatus.COMPLETED) {
@@ -217,6 +234,8 @@ public class SaleServiceImpl implements SaleService {
             int after = before - item.getQuantity();
 
             InventoryTransaction txn = new InventoryTransaction();
+            Company company = currentCompanyProvider != null ? currentCompanyProvider.getCurrentCompany() : null;
+            txn.setCompany(company);
             txn.setProduct(product);
             txn.setTransactionType(InventoryTransactionType.SALE_DEDUCTION);
             txn.setQuantityDelta(-item.getQuantity());
@@ -245,8 +264,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     @Transactional
     public SalesOrderResponseDto cancelSaleOrder(Long id, String currentUsername) {
-        SalesOrder order = salesOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("SalesOrder", "id", id));
+        SalesOrder order = findOrderOrThrow(id);
 
         if (order.getStatus() == SalesOrderStatus.COMPLETED) {
             throw new InvalidStateTransitionException("Cannot cancel a sales order that has already been COMPLETED.");
@@ -286,6 +304,7 @@ public class SaleServiceImpl implements SaleService {
                 .collect(Collectors.toSet());
         List<Product> products = productRepository.findAllById(productIds);
         Map<Long, Product> productMap = products.stream()
+                .filter(p -> p.getCompany() == null || currentCompanyProvider == null || currentCompanyProvider.getCurrentCompanyId() == null || p.getCompany().getId().equals(currentCompanyProvider.getCurrentCompanyId()))
                 .collect(Collectors.toMap(Product::getId, p -> p));
 
         BigDecimal orderTotal = BigDecimal.ZERO;
@@ -322,9 +341,16 @@ public class SaleServiceImpl implements SaleService {
         String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         String orderNumber = "SO-" + year + "-" + randomSuffix;
 
-        while (salesOrderRepository.existsByOrderNumber(orderNumber)) {
-            randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-            orderNumber = "SO-" + year + "-" + randomSuffix;
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            while (salesOrderRepository.existsByOrderNumberAndCompanyId(orderNumber, currentCompanyProvider.getCurrentCompanyId())) {
+                randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                orderNumber = "SO-" + year + "-" + randomSuffix;
+            }
+        } else {
+            while (salesOrderRepository.existsByOrderNumber(orderNumber)) {
+                randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                orderNumber = "SO-" + year + "-" + randomSuffix;
+            }
         }
 
         return orderNumber;

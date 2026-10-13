@@ -7,10 +7,12 @@ import com.smartinventory.settings.repository.SystemSettingsRepository;
 import com.smartinventory.settings.service.SystemSettingsService;
 import com.smartinventory.user.entity.User;
 import com.smartinventory.user.repository.UserRepository;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -18,31 +20,44 @@ public class SystemSettingsServiceImpl implements SystemSettingsService {
 
     private final SystemSettingsRepository systemSettingsRepository;
     private final UserRepository userRepository;
+    private final CurrentCompanyProvider currentCompanyProvider;
 
     public SystemSettingsServiceImpl(
             SystemSettingsRepository systemSettingsRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CurrentCompanyProvider currentCompanyProvider
     ) {
         this.systemSettingsRepository = systemSettingsRepository;
         this.userRepository = userRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
     }
 
     @Override
     @Transactional(readOnly = true)
     public SystemSettingsDto getSettings() {
-        SystemSettings settings = systemSettingsRepository.findSingletonSettings()
-                .orElseGet(this::createDefaultSettings);
+        Long companyId = currentCompanyProvider != null ? currentCompanyProvider.getCurrentCompanyId() : null;
+        SystemSettings settings = (companyId != null ? systemSettingsRepository.findByCompanyId(companyId) : Optional.<SystemSettings>empty())
+                .orElseGet(() -> systemSettingsRepository.findSingletonSettings()
+                        .orElseGet(this::createDefaultSettings));
         return mapToDto(settings);
     }
 
     @Override
     public SystemSettingsDto updateSettings(UpdateSystemSettingsDto request, String currentUsername) {
-        SystemSettings settings = systemSettingsRepository.findSingletonSettings()
-                .orElseGet(() -> {
-                    SystemSettings s = new SystemSettings();
-                    s.setId(1L);
-                    return s;
-                });
+        Long companyId = currentCompanyProvider != null ? currentCompanyProvider.getCurrentCompanyId() : null;
+        SystemSettings settings = (companyId != null ? systemSettingsRepository.findByCompanyId(companyId) : Optional.<SystemSettings>empty())
+                .orElseGet(() -> systemSettingsRepository.findSingletonSettings()
+                        .orElseGet(() -> {
+                            SystemSettings s = new SystemSettings();
+                            if (currentCompanyProvider != null) {
+                                s.setCompany(currentCompanyProvider.getCurrentCompany());
+                            }
+                            return s;
+                        }));
+
+        if (settings.getCompany() == null && currentCompanyProvider != null && currentCompanyProvider.getCurrentCompany() != null) {
+            settings.setCompany(currentCompanyProvider.getCurrentCompany());
+        }
 
         settings.setCompanyName(request.companyName().trim());
         settings.setCompanyEmail(request.companyEmail() != null ? request.companyEmail().trim() : null);
@@ -71,7 +86,7 @@ public class SystemSettingsServiceImpl implements SystemSettingsService {
         s.setCompanyEmail("admin@sims.local");
         s.setCompanyPhone("+1 (555) 019-2834");
         s.setCurrency("INR");
-        s.setTimezone("Asia/Kolkata");
+        s.setTimezone("UTC");
         s.setDefaultReorderThreshold(10);
         s.setLowStockAlertsEnabled(true);
         s.setOutOfStockAlertsEnabled(true);

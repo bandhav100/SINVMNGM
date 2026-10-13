@@ -25,8 +25,25 @@ import {
   IndianRupee,
   Truck,
   Calendar,
-  X
+  X,
+  PieChart as PieChartIcon,
+  BarChart3,
+  Building
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend
+} from 'recharts';
+import ChartCard from '../../components/charts/ChartCard';
+import CustomTooltip from '../../components/charts/CustomTooltip';
 
 export default function PurchasesPage() {
   const { user } = useAuth();
@@ -107,6 +124,36 @@ export default function PurchasesPage() {
   useEffect(() => {
     fetchPurchases(page, appliedSearch, statusFilter, supplierFilter);
   }, [page, appliedSearch, statusFilter, supplierFilter, fetchPurchases]);
+
+  const [showCharts, setShowCharts] = useState(true);
+
+  // Chart dataset calculations
+  const receivedPurchasesCount = purchases.filter((p) => p.status === 'RECEIVED').length;
+  const orderedPurchasesCount = purchases.filter((p) => p.status === 'ORDERED').length;
+  const cancelledPurchasesCount = purchases.filter((p) => p.status === 'CANCELLED').length;
+  const draftPurchasesCount = purchases.filter((p) => p.status === 'DRAFT').length;
+
+  const purchaseStatusDistribution = [
+    { name: 'Received', value: receivedPurchasesCount, color: '#10b981' },
+    { name: 'Ordered / Pending', value: orderedPurchasesCount, color: '#f59e0b' },
+    { name: 'Draft', value: draftPurchasesCount, color: '#3b82f6' },
+    { name: 'Cancelled', value: cancelledPurchasesCount, color: '#ef4444' }
+  ].filter((d) => d.value > 0);
+
+  const supplierSpendMap = {};
+  purchases.forEach((p) => {
+    const sName = p.supplierName || 'Other Vendor';
+    const amount = parseFloat(p.totalAmount) || 0;
+    supplierSpendMap[sName] = (supplierSpendMap[sName] || 0) + amount;
+  });
+  const supplierSpendData = Object.entries(supplierSpendMap)
+    .map(([name, amount]) => ({
+      name: name.length > 14 ? `${name.substring(0, 12)}...` : name,
+      fullName: name,
+      amount
+    }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 6);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -224,6 +271,13 @@ export default function PurchasesPage() {
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <Button
+            variant="outline"
+            icon={PieChartIcon}
+            onClick={() => setShowCharts((prev) => !prev)}
+          >
+            {showCharts ? 'Hide Charts' : 'Show Charts'}
+          </Button>
+          <Button
             variant="secondary"
             icon={RefreshCw}
             onClick={() => fetchPurchases(page, appliedSearch, statusFilter, supplierFilter)}
@@ -306,6 +360,82 @@ export default function PurchasesPage() {
           </div>
         </div>
       </div>
+
+      {/* Visual Analytics Charts Section */}
+      {showCharts && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: '1.25rem',
+            marginBottom: '1.5rem'
+          }}
+        >
+          <ChartCard
+            title="PO Status Distribution"
+            subtitle={`${purchases.length} orders shown on current page`}
+            icon={PieChartIcon}
+            iconColor="#10b981"
+          >
+            {purchaseStatusDistribution.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No purchase orders recorded yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Tooltip content={<CustomTooltip valueSuffix=" orders" />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  <Pie
+                    data={purchaseStatusDistribution}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {purchaseStatusDistribution.map((entry, index) => (
+                      <Cell key={`cell-po-status-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          <ChartCard
+            title="Procurement Spend by Supplier"
+            subtitle="Top vendors by total purchase value"
+            icon={Building}
+            iconColor="#6366f1"
+          >
+            {supplierSpendData.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No supplier spend data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={supplierSpendData} margin={{ top: 10, right: 10, left: 10, bottom: 25 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
+                  <YAxis
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
+                  />
+                  <Tooltip
+                    content={
+                      <CustomTooltip
+                        formatter={(val) => `₹${Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                      />
+                    }
+                  />
+                  <Bar dataKey="amount" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+        </div>
+      )}
 
       {/* Filter Toolbar */}
       <div

@@ -84,6 +84,10 @@ public class JwtService {
         }
     }
 
+    public void invalidateToken(String token) {
+        revokeToken(token);
+    }
+
     public void revokeToken(String token) {
         try {
             String tokenId = extractTokenId(token);

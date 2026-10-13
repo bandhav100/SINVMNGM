@@ -1,5 +1,7 @@
 package com.smartinventory.dashboard.service.impl;
 
+import com.smartinventory.common.exception.ResourceNotFoundException;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import com.smartinventory.dashboard.dto.DashboardActivityItemDto;
 import com.smartinventory.dashboard.dto.DashboardAlertItemDto;
 import com.smartinventory.dashboard.dto.DashboardSummaryDto;
@@ -32,6 +34,22 @@ public class DashboardServiceImpl implements DashboardService {
     private final SalesOrderRepository salesOrderRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
+    private final CurrentCompanyProvider currentCompanyProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public DashboardServiceImpl(
+            ProductRepository productRepository,
+            SalesOrderRepository salesOrderRepository,
+            PurchaseOrderRepository purchaseOrderRepository,
+            InventoryTransactionRepository inventoryTransactionRepository,
+            CurrentCompanyProvider currentCompanyProvider
+    ) {
+        this.productRepository = productRepository;
+        this.salesOrderRepository = salesOrderRepository;
+        this.purchaseOrderRepository = purchaseOrderRepository;
+        this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
 
     public DashboardServiceImpl(
             ProductRepository productRepository,
@@ -39,14 +57,14 @@ public class DashboardServiceImpl implements DashboardService {
             PurchaseOrderRepository purchaseOrderRepository,
             InventoryTransactionRepository inventoryTransactionRepository
     ) {
-        this.productRepository = productRepository;
-        this.salesOrderRepository = salesOrderRepository;
-        this.purchaseOrderRepository = purchaseOrderRepository;
-        this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this(productRepository, salesOrderRepository, purchaseOrderRepository, inventoryTransactionRepository, null);
     }
 
     @Override
     public DashboardSummaryDto getDashboardSummary(Authentication authentication) {
+        Long companyId = (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null)
+                ? currentCompanyProvider.getCurrentCompanyId() : null;
+
         boolean isSalesStaffOnly = false;
         if (authentication != null && authentication.getAuthorities() != null) {
             boolean hasStaff = authentication.getAuthorities().stream()
@@ -61,21 +79,51 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         // 1. Inventory KPIs
-        long totalProducts = productRepository.countTotalProducts();
-        long totalStockUnits = productRepository.sumTotalStockUnits();
-        long lowStockCount = productRepository.countLowStock();
-        long outOfStockCount = productRepository.countOutOfStock();
-        long reorderRequiredCount = productRepository.countReorderRequired();
-        BigDecimal potentialRetailValuation = productRepository.sumTotalRetailValue();
+        long totalProducts;
+        long totalStockUnits;
+        long lowStockCount;
+        long outOfStockCount;
+        long reorderRequiredCount;
+        BigDecimal potentialRetailValuation;
+
+        if (companyId != null) {
+            totalProducts = productRepository.countTotalProducts(companyId);
+            totalStockUnits = productRepository.sumTotalStockUnits(companyId);
+            lowStockCount = productRepository.countLowStock(companyId);
+            outOfStockCount = productRepository.countOutOfStock(companyId);
+            reorderRequiredCount = productRepository.countReorderRequired(companyId);
+            potentialRetailValuation = productRepository.sumTotalRetailValue(companyId);
+        } else {
+            totalProducts = productRepository.countTotalProducts();
+            totalStockUnits = productRepository.sumTotalStockUnits();
+            lowStockCount = productRepository.countLowStock();
+            outOfStockCount = productRepository.countOutOfStock();
+            reorderRequiredCount = productRepository.countReorderRequired();
+            potentialRetailValuation = productRepository.sumTotalRetailValue();
+        }
+
         if (potentialRetailValuation == null) {
             potentialRetailValuation = BigDecimal.ZERO;
         }
 
         // 2. Sales KPIs
-        long completedSalesCount = salesOrderRepository.countByStatus(SalesOrderStatus.COMPLETED);
-        long draftSalesCount = salesOrderRepository.countByStatus(SalesOrderStatus.DRAFT);
-        long cancelledSalesCount = salesOrderRepository.countByStatus(SalesOrderStatus.CANCELLED);
-        BigDecimal completedSalesRevenue = salesOrderRepository.sumTotalAmountByStatus(SalesOrderStatus.COMPLETED);
+        long completedSalesCount;
+        long draftSalesCount;
+        long cancelledSalesCount;
+        BigDecimal completedSalesRevenue;
+
+        if (companyId != null) {
+            completedSalesCount = salesOrderRepository.countByCompanyIdAndStatus(companyId, SalesOrderStatus.COMPLETED);
+            draftSalesCount = salesOrderRepository.countByCompanyIdAndStatus(companyId, SalesOrderStatus.DRAFT);
+            cancelledSalesCount = salesOrderRepository.countByCompanyIdAndStatus(companyId, SalesOrderStatus.CANCELLED);
+            completedSalesRevenue = salesOrderRepository.sumTotalAmountByStatus(companyId, SalesOrderStatus.COMPLETED);
+        } else {
+            completedSalesCount = salesOrderRepository.countByStatus(SalesOrderStatus.COMPLETED);
+            draftSalesCount = salesOrderRepository.countByStatus(SalesOrderStatus.DRAFT);
+            cancelledSalesCount = salesOrderRepository.countByStatus(SalesOrderStatus.CANCELLED);
+            completedSalesRevenue = salesOrderRepository.sumTotalAmountByStatus(SalesOrderStatus.COMPLETED);
+        }
+
         if (completedSalesRevenue == null) {
             completedSalesRevenue = BigDecimal.ZERO;
         }
@@ -88,17 +136,27 @@ public class DashboardServiceImpl implements DashboardService {
         BigDecimal receivedPurchasesTotalCost = BigDecimal.ZERO;
 
         if (purchaseMetricsVisible) {
-            totalPurchasesCount = purchaseOrderRepository.count();
-            receivedPurchasesCount = purchaseOrderRepository.countByStatus(PurchaseOrderStatus.RECEIVED);
-            pendingPurchasesCount = purchaseOrderRepository.countByStatus(PurchaseOrderStatus.ORDERED);
-            receivedPurchasesTotalCost = purchaseOrderRepository.sumTotalAmountByStatus(PurchaseOrderStatus.RECEIVED);
+            if (companyId != null) {
+                totalPurchasesCount = purchaseOrderRepository.countByCompanyId(companyId);
+                receivedPurchasesCount = purchaseOrderRepository.countByCompanyIdAndStatus(companyId, PurchaseOrderStatus.RECEIVED);
+                pendingPurchasesCount = purchaseOrderRepository.countByCompanyIdAndStatus(companyId, PurchaseOrderStatus.ORDERED);
+                receivedPurchasesTotalCost = purchaseOrderRepository.sumTotalAmountByStatus(companyId, PurchaseOrderStatus.RECEIVED);
+            } else {
+                totalPurchasesCount = purchaseOrderRepository.count();
+                receivedPurchasesCount = purchaseOrderRepository.countByStatus(PurchaseOrderStatus.RECEIVED);
+                pendingPurchasesCount = purchaseOrderRepository.countByStatus(PurchaseOrderStatus.ORDERED);
+                receivedPurchasesTotalCost = purchaseOrderRepository.sumTotalAmountByStatus(PurchaseOrderStatus.RECEIVED);
+            }
             if (receivedPurchasesTotalCost == null) {
                 receivedPurchasesTotalCost = BigDecimal.ZERO;
             }
         }
 
         // 4. Critical Alerts (top 5 low/out of stock items)
-        List<Product> reorderItems = productRepository.findReorderRequiredProducts();
+        List<Product> reorderItems = companyId != null
+                ? productRepository.findReorderRequiredProducts(companyId)
+                : productRepository.findReorderRequiredProducts();
+
         List<DashboardAlertItemDto> criticalAlerts = new ArrayList<>();
         if (reorderItems != null) {
             for (int i = 0; i < Math.min(reorderItems.size(), 5); i++) {
@@ -119,7 +177,10 @@ public class DashboardServiceImpl implements DashboardService {
         List<DashboardActivityItemDto> activityFeed = new ArrayList<>();
 
         // Sales activity
-        List<SalesOrder> recentSales = salesOrderRepository.findTop5ByOrderByCreatedAtDesc();
+        List<SalesOrder> recentSales = companyId != null
+                ? salesOrderRepository.findTop5ByCompanyIdOrderByCreatedAtDesc(companyId)
+                : salesOrderRepository.findTop5ByOrderByCreatedAtDesc();
+
         if (recentSales != null) {
             for (SalesOrder so : recentSales) {
                 Instant ts = so.getUpdatedAt() != null ? so.getUpdatedAt() : so.getCreatedAt();
@@ -142,7 +203,10 @@ public class DashboardServiceImpl implements DashboardService {
 
         // Purchase activity (only if permitted)
         if (purchaseMetricsVisible) {
-            List<PurchaseOrder> recentPurchases = purchaseOrderRepository.findTop5ByOrderByCreatedAtDesc();
+            List<PurchaseOrder> recentPurchases = companyId != null
+                    ? purchaseOrderRepository.findTop5ByCompanyIdOrderByCreatedAtDesc(companyId)
+                    : purchaseOrderRepository.findTop5ByOrderByCreatedAtDesc();
+
             if (recentPurchases != null) {
                 for (PurchaseOrder po : recentPurchases) {
                     Instant ts = po.getUpdatedAt() != null ? po.getUpdatedAt() : po.getCreatedAt();
@@ -163,7 +227,10 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         // Inventory movements activity
-        List<InventoryTransaction> recentMovements = inventoryTransactionRepository.findTop5ByOrderByCreatedAtDesc();
+        List<InventoryTransaction> recentMovements = companyId != null
+                ? inventoryTransactionRepository.findTop5ByCompanyIdOrderByCreatedAtDesc(companyId)
+                : inventoryTransactionRepository.findTop5ByOrderByCreatedAtDesc();
+
         if (recentMovements != null) {
             for (InventoryTransaction tx : recentMovements) {
                 String deltaSign = tx.getQuantityDelta() > 0 ? "+" : "";

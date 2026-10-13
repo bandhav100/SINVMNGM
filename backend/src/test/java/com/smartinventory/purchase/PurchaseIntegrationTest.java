@@ -99,10 +99,10 @@ class PurchaseIntegrationTest {
         salesUser = createTestUser("po_sales", Role.SALES_STAFF);
 
         // Setup supplier and product
-        testSupplier = new Supplier(null, "Reliable Logistics", "Bob", "bob@reliable.local", "555-1234", "Warehouse 5", true);
+        testSupplier = new Supplier((Long) null, "Reliable Logistics", "Bob", "bob@reliable.local", "555-1234", "Warehouse 5", true);
         testSupplier = supplierRepository.save(testSupplier);
 
-        testProduct = new Product(null, "Test Integration Gadget", "GADGET-TEST-" + System.currentTimeMillis(), "Description", BigDecimal.valueOf(20.00), 10, 5);
+        testProduct = new Product((Long) null, "Test Integration Gadget", "GADGET-TEST-" + System.currentTimeMillis(), "Description", BigDecimal.valueOf(20.00), 10, 5);
         testProduct = productRepository.save(testProduct);
     }
 

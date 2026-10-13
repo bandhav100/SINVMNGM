@@ -3,6 +3,8 @@ package com.smartinventory.purchase.service.impl;
 import com.smartinventory.common.dto.PageResponseDto;
 import com.smartinventory.common.exception.InvalidStateTransitionException;
 import com.smartinventory.common.exception.ResourceNotFoundException;
+import com.smartinventory.company.entity.Company;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import com.smartinventory.inventory.entity.InventoryTransaction;
 import com.smartinventory.inventory.model.InventoryTransactionType;
 import com.smartinventory.inventory.repository.InventoryTransactionRepository;
@@ -38,28 +40,47 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
+    private final CurrentCompanyProvider currentCompanyProvider;
 
     public PurchaseServiceImpl(
             PurchaseOrderRepository purchaseOrderRepository,
             SupplierRepository supplierRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
-            InventoryTransactionRepository inventoryTransactionRepository
+            InventoryTransactionRepository inventoryTransactionRepository,
+            CurrentCompanyProvider currentCompanyProvider
     ) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.supplierRepository = supplierRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
+
+    private PurchaseOrder findOrderOrThrow(Long id) {
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            return purchaseOrderRepository.findByIdAndCompanyId(id, currentCompanyProvider.getCurrentCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
+        }
+        return purchaseOrderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
+    }
+
+    private Supplier findSupplierOrThrow(Long supplierId) {
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            return supplierRepository.findByIdAndCompanyId(supplierId, currentCompanyProvider.getCurrentCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", supplierId));
+        }
+        return supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", supplierId));
     }
 
     @Override
     @Transactional
     public PurchaseOrderResponseDto createPurchaseOrder(CreatePurchaseOrderRequestDto request, String currentUsername) {
         User user = findUserByUsername(currentUsername);
-
-        Supplier supplier = supplierRepository.findById(request.supplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", request.supplierId()));
+        Supplier supplier = findSupplierOrThrow(request.supplierId());
 
         if (!supplier.isActive()) {
             throw new IllegalArgumentException("Cannot create purchase order for inactive supplier: " + supplier.getName());
@@ -68,6 +89,8 @@ public class PurchaseServiceImpl implements PurchaseService {
         validateItems(request.items());
 
         PurchaseOrder order = new PurchaseOrder();
+        Company company = currentCompanyProvider != null ? currentCompanyProvider.getCurrentCompany() : null;
+        order.setCompany(company);
         order.setOrderNumber(generateOrderNumber());
         order.setSupplier(supplier);
         order.setExpectedDeliveryDate(request.expectedDeliveryDate());
@@ -97,37 +120,43 @@ public class PurchaseServiceImpl implements PurchaseService {
             LocalDate endDate,
             Pageable pageable
     ) {
-        Page<PurchaseOrder> page = purchaseOrderRepository.searchPurchaseOrders(
-                search != null ? search.trim() : null,
-                status,
-                supplierId,
-                startDate,
-                endDate,
-                pageable
-        );
+        Page<PurchaseOrder> page = (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null)
+                ? purchaseOrderRepository.searchPurchaseOrders(
+                        currentCompanyProvider.getCurrentCompanyId(),
+                        search != null ? search.trim() : null,
+                        status,
+                        supplierId,
+                        startDate,
+                        endDate,
+                        pageable
+                )
+                : purchaseOrderRepository.searchPurchaseOrders(
+                        search != null ? search.trim() : null,
+                        status,
+                        supplierId,
+                        startDate,
+                        endDate,
+                        pageable
+                );
         return PageResponseDto.fromPage(page, PurchaseOrderSummaryDto::fromEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PurchaseOrderResponseDto getPurchaseOrderById(Long id) {
-        PurchaseOrder order = purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
-        return PurchaseOrderResponseDto.fromEntity(order);
+        return PurchaseOrderResponseDto.fromEntity(findOrderOrThrow(id));
     }
 
     @Override
     @Transactional
     public PurchaseOrderResponseDto updatePurchaseOrder(Long id, UpdatePurchaseOrderRequestDto request, String currentUsername) {
-        PurchaseOrder order = purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
+        PurchaseOrder order = findOrderOrThrow(id);
 
         if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
             throw new InvalidStateTransitionException("Only DRAFT purchase orders can be updated. Current status is " + order.getStatus());
         }
 
-        Supplier supplier = supplierRepository.findById(request.supplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", request.supplierId()));
+        Supplier supplier = findSupplierOrThrow(request.supplierId());
 
         if (!supplier.isActive()) {
             throw new IllegalArgumentException("Cannot update purchase order with inactive supplier: " + supplier.getName());
@@ -150,8 +179,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public void deletePurchaseOrder(Long id) {
-        PurchaseOrder order = purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
+        PurchaseOrder order = findOrderOrThrow(id);
 
         if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
             throw new InvalidStateTransitionException("Only DRAFT purchase orders can be deleted. Current status is " + order.getStatus());
@@ -163,35 +191,38 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public PurchaseOrderResponseDto submitPurchaseOrder(Long id, String currentUsername) {
-        PurchaseOrder order = purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
+        PurchaseOrder order = findOrderOrThrow(id);
 
         if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
-            throw new InvalidStateTransitionException("Only DRAFT purchase orders can be submitted as ORDERED. Current status is " + order.getStatus());
+            throw new InvalidStateTransitionException("Only DRAFT purchase orders can be submitted (ordered). Current status is " + order.getStatus());
         }
 
         if (order.getItems().isEmpty()) {
-            throw new IllegalArgumentException("Cannot submit an empty purchase order");
+            throw new IllegalArgumentException("Cannot submit a purchase order with no line items");
         }
 
         order.setStatus(PurchaseOrderStatus.ORDERED);
         order.setOrderedAt(Instant.now());
 
-        PurchaseOrder updatedOrder = purchaseOrderRepository.save(order);
-        return PurchaseOrderResponseDto.fromEntity(updatedOrder);
+        PurchaseOrder updated = purchaseOrderRepository.save(order);
+        return PurchaseOrderResponseDto.fromEntity(updated);
     }
 
     @Override
     @Transactional
     public PurchaseOrderResponseDto receivePurchaseOrder(Long id, String currentUsername) {
-        // Concurrency-safe: lock the purchase order with pessimistic write lock
-        PurchaseOrder order = purchaseOrderRepository.findByIdWithLock(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
-
-        if (order.getStatus() == PurchaseOrderStatus.RECEIVED) {
-            throw new InvalidStateTransitionException("Purchase order " + order.getOrderNumber() + " has already been received.");
+        PurchaseOrder order;
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            order = purchaseOrderRepository.findByIdAndCompanyIdWithLock(id, currentCompanyProvider.getCurrentCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
+        } else {
+            order = purchaseOrderRepository.findByIdWithLock(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
         }
 
+        if (order.getStatus() == PurchaseOrderStatus.RECEIVED) {
+            throw new InvalidStateTransitionException("Purchase order " + order.getOrderNumber() + " has already been received");
+        }
         if (order.getStatus() != PurchaseOrderStatus.ORDERED) {
             throw new InvalidStateTransitionException("Cannot receive purchase order in " + order.getStatus() + " status. Order must be in ORDERED status.");
         }
@@ -202,7 +233,6 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         User receivingUser = findUserByUsername(currentUsername);
 
-        // Sort product IDs in ascending order and acquire pessimistic write locks to prevent deadlocks
         List<Long> productIds = order.getItems().stream()
                 .map(item -> item.getProduct().getId())
                 .sorted()
@@ -218,7 +248,6 @@ public class PurchaseServiceImpl implements PurchaseService {
                 throw new ResourceNotFoundException("Product", "id", item.getProduct().getId());
             }
 
-            // Check ledger idempotency: prevent duplicate receiving entries for this PO and product
             if (inventoryTransactionRepository.existsByReferenceTypeAndReferenceIdAndProductId("PURCHASE_ORDER", order.getId(), product.getId())) {
                 throw new InvalidStateTransitionException("Stock for product " + product.getSku() + " has already been received for purchase order " + order.getOrderNumber());
             }
@@ -228,6 +257,8 @@ public class PurchaseServiceImpl implements PurchaseService {
             int after = before + delta;
 
             InventoryTransaction txn = new InventoryTransaction();
+            Company company = currentCompanyProvider != null ? currentCompanyProvider.getCurrentCompany() : null;
+            txn.setCompany(company);
             txn.setProduct(product);
             txn.setTransactionType(InventoryTransactionType.PURCHASE_RECEIPT);
             txn.setQuantityDelta(delta);
@@ -255,8 +286,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public PurchaseOrderResponseDto cancelPurchaseOrder(Long id, String currentUsername) {
-        PurchaseOrder order = purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PurchaseOrder", "id", id));
+        PurchaseOrder order = findOrderOrThrow(id);
 
         if (order.getStatus() == PurchaseOrderStatus.RECEIVED) {
             throw new InvalidStateTransitionException("Cannot cancel a purchase order that has already been RECEIVED.");
@@ -287,7 +317,9 @@ public class PurchaseServiceImpl implements PurchaseService {
     private void populateAndCalculateItems(PurchaseOrder order, List<PurchaseOrderItemRequestDto> itemDtos) {
         Set<Long> productIds = itemDtos.stream().map(PurchaseOrderItemRequestDto::productId).collect(Collectors.toSet());
         List<Product> products = productRepository.findAllById(productIds);
-        Map<Long, Product> productMap = products.stream().collect(Collectors.toMap(Product::getId, p -> p));
+        Map<Long, Product> productMap = products.stream()
+                .filter(p -> p.getCompany() == null || currentCompanyProvider == null || currentCompanyProvider.getCurrentCompanyId() == null || p.getCompany().getId().equals(currentCompanyProvider.getCurrentCompanyId()))
+                .collect(Collectors.toMap(Product::getId, p -> p));
 
         BigDecimal orderTotal = BigDecimal.ZERO;
 
@@ -318,9 +350,16 @@ public class PurchaseServiceImpl implements PurchaseService {
         String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         String orderNumber = "PO-" + year + "-" + randomSuffix;
 
-        while (purchaseOrderRepository.existsByOrderNumber(orderNumber)) {
-            randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-            orderNumber = "PO-" + year + "-" + randomSuffix;
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            while (purchaseOrderRepository.existsByOrderNumberAndCompanyId(orderNumber, currentCompanyProvider.getCurrentCompanyId())) {
+                randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                orderNumber = "PO-" + year + "-" + randomSuffix;
+            }
+        } else {
+            while (purchaseOrderRepository.existsByOrderNumber(orderNumber)) {
+                randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                orderNumber = "PO-" + year + "-" + randomSuffix;
+            }
         }
 
         return orderNumber;

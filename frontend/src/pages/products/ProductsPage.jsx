@@ -20,8 +20,24 @@ import {
   Boxes,
   TrendingDown,
   X,
-  Tag
+  Tag,
+  PieChart as PieChartIcon,
+  BarChart3
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend
+} from 'recharts';
+import ChartCard from '../../components/charts/ChartCard';
+import CustomTooltip from '../../components/charts/CustomTooltip';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -146,10 +162,29 @@ export default function ProductsPage() {
     }
   };
 
+  const [showCharts, setShowCharts] = useState(true);
+
   // Stats calculation
   const totalStockUnits = products.reduce((acc, p) => acc + (p.quantity || 0), 0);
   const lowStockCount = products.filter((p) => p.quantity > 0 && p.quantity <= p.reorderLevel).length;
   const outOfStockCount = products.filter((p) => p.quantity === 0).length;
+  const inStockHealthyCount = products.filter((p) => p.quantity > p.reorderLevel).length;
+
+  const productHealthData = [
+    { name: 'In Stock (Healthy)', value: inStockHealthyCount, color: '#10b981' },
+    { name: 'Low Stock (Warning)', value: lowStockCount, color: '#f59e0b' },
+    { name: 'Out of Stock', value: outOfStockCount, color: '#ef4444' }
+  ].filter((d) => d.value > 0);
+
+  const productStockBarData = [...products]
+    .sort((a, b) => (b.quantity || 0) - (a.quantity || 0))
+    .slice(0, 6)
+    .map((p) => ({
+      name: p.name.length > 14 ? `${p.name.substring(0, 12)}...` : p.name,
+      fullName: p.name,
+      quantity: p.quantity || 0,
+      reorderLevel: p.reorderLevel || 0
+    }));
 
   return (
     <div>
@@ -212,6 +247,73 @@ export default function ProductsPage() {
         </div>
       </div>
 
+      {/* Visual Analytics Charts Section */}
+      {showCharts && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: '1.25rem',
+            marginBottom: '1.5rem'
+          }}
+        >
+          <ChartCard
+            title="Stock Level Health"
+            subtitle={`${products.length} catalog items on current page`}
+            icon={PieChartIcon}
+            iconColor="#10b981"
+          >
+            {productHealthData.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No product items available for chart
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Tooltip content={<CustomTooltip valueSuffix=" products" />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  <Pie
+                    data={productHealthData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {productHealthData.map((entry, index) => (
+                      <Cell key={`cell-prod-health-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          <ChartCard
+            title="Product Stock Units Ranking"
+            subtitle="Top products by current available inventory units"
+            icon={BarChart3}
+            iconColor="#3b82f6"
+          >
+            {productStockBarData.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                No product stock data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={productStockBarData} margin={{ top: 10, right: 10, left: 10, bottom: 25 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip content={<CustomTooltip valueSuffix=" units" />} />
+                  <Bar dataKey="quantity" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+        </div>
+      )}
+
       {/* Main Card */}
       <div className="card">
         <div className="card-header">
@@ -236,6 +338,14 @@ export default function ProductsPage() {
           </form>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Button
+              variant="outline"
+              icon={PieChartIcon}
+              onClick={() => setShowCharts((prev) => !prev)}
+              title="Toggle Visual Charts"
+            >
+              {showCharts ? 'Hide Charts' : 'Show Charts'}
+            </Button>
             <Button
               variant="secondary"
               icon={Tag}

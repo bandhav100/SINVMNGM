@@ -1,10 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Layout from './components/common/Layout';
+import LoadingSpinner from './components/common/LoadingSpinner';
+import LandingPage from './pages/landing/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import SetupAdminPage from './pages/auth/SetupAdminPage';
+import CreateInventoryPage from './pages/auth/CreateInventoryPage';
 import ProductsPage from './pages/products/ProductsPage';
 import SuppliersPage from './pages/suppliers/SuppliersPage';
 import UsersPage from './pages/users/UsersPage';
@@ -16,43 +19,67 @@ import ReportsPage from './pages/reports/ReportsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import InventoryPage from './pages/inventory/InventoryPage';
-import ModulePlaceholderPage from './pages/common/ModulePlaceholderPage';
-import {
-  LayoutDashboard,
-  Layers,
-  Truck,
-  ShoppingCart,
-  TrendingUp,
-  Brain,
-  Bell,
-  FileBarChart,
-  Users,
-  Settings
-} from 'lucide-react';
+
+function PublicLandingOrRedirect() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        width: '100vw',
+        backgroundColor: '#0b0f19',
+        color: '#ffffff'
+      }}>
+        <LoadingSpinner text="Authenticating session..." />
+      </div>
+    );
+  }
+
+  // Authenticated users opening '/' are automatically redirected to the dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Unauthenticated visitors see the public landing page
+  return <LandingPage />;
+}
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public Authentication Routes */}
+          {/* Public Landing & Authentication Routes */}
+          <Route path="/" element={<PublicLandingOrRedirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/setup-admin" element={<SetupAdminPage />} />
+          <Route path="/create-inventory" element={<CreateInventoryPage />} />
 
-          {/* Protected Application Layout */}
+          {/* Protected Application Layout (For Authenticated Users) */}
           <Route
-            path="/"
             element={
               <ProtectedRoute>
                 <Layout />
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            
+            {/* Dashboard (All 4 roles) */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Products (All 4 roles) */}
             <Route
-              path="products"
+              path="/products"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
                   <ProductsPage />
@@ -62,7 +89,7 @@ export default function App() {
 
             {/* Suppliers (Admin, Inventory Manager, Purchase Manager) */}
             <Route
-              path="suppliers"
+              path="/suppliers"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER']}>
                   <SuppliersPage />
@@ -72,7 +99,7 @@ export default function App() {
 
             {/* Users & Roles (Admin Only) */}
             <Route
-              path="users"
+              path="/users"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN']}>
                   <UsersPage />
@@ -80,18 +107,9 @@ export default function App() {
               }
             />
 
-            {/* Dashboard (All 4 roles) */}
+            {/* Inventory (All 4 roles) */}
             <Route
-              path="dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="inventory"
+              path="/inventory"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
                   <InventoryPage />
@@ -99,8 +117,9 @@ export default function App() {
               }
             />
 
+            {/* Purchases (Admin, Purchase Manager, Inventory Manager) */}
             <Route
-              path="purchases"
+              path="/purchases"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'PURCHASE_MANAGER', 'INVENTORY_MANAGER']}>
                   <PurchasesPage />
@@ -108,8 +127,9 @@ export default function App() {
               }
             />
 
+            {/* Sales (All 4 roles) */}
             <Route
-              path="sales"
+              path="/sales"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
                   <SalesPage />
@@ -117,8 +137,9 @@ export default function App() {
               }
             />
 
+            {/* Smart Insights (All 4 roles) */}
             <Route
-              path="insights"
+              path="/insights"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
                   <SmartInsightsPage />
@@ -126,8 +147,9 @@ export default function App() {
               }
             />
 
+            {/* Alerts (All 4 roles) */}
             <Route
-              path="alerts"
+              path="/alerts"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
                   <AlertsPage />
@@ -135,8 +157,9 @@ export default function App() {
               }
             />
 
+            {/* Reports (All 4 roles) */}
             <Route
-              path="reports"
+              path="/reports"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER', 'PURCHASE_MANAGER', 'SALES_STAFF']}>
                   <ReportsPage />
@@ -144,8 +167,9 @@ export default function App() {
               }
             />
 
+            {/* System Settings (Admin Only) */}
             <Route
-              path="settings"
+              path="/settings"
               element={
                 <ProtectedRoute allowedRoles={['ADMIN']}>
                   <SettingsPage />
@@ -153,7 +177,8 @@ export default function App() {
               }
             />
 
-            <Route path="*" element={<Navigate to="/products" replace />} />
+            {/* Fallback Catch-All */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>
       </AuthProvider>

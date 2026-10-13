@@ -21,8 +21,26 @@ import {
   Info,
   CheckCircle,
   Clock,
-  ShieldAlert
+  ShieldAlert,
+  BarChart2,
+  PieChart as PieChartIcon,
+  BarChart3,
+  Target
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend
+} from 'recharts';
+import ChartCard from '../../components/charts/ChartCard';
+import CustomTooltip from '../../components/charts/CustomTooltip';
 
 export default function SmartInsightsPage() {
   const { user } = useAuth();
@@ -115,6 +133,29 @@ export default function SmartInsightsPage() {
     setIsCustomDate(true);
     loadData();
   };
+
+  // Visual Chart Datasets
+  const purchaseVsSalesUnitsData = purchaseVsSales ? [
+    { name: 'Purchased Inflow', units: Number(purchaseVsSales.purchasedUnits || 0), fill: '#10b981' },
+    { name: 'Sold Outflow', units: Number(purchaseVsSales.soldUnits || 0), fill: '#6366f1' }
+  ] : [];
+
+  const purchaseVsSalesFinanceData = purchaseVsSales ? [
+    { name: 'Procurement Spend', amount: Number(purchaseVsSales.purchaseCostTotal || 0), fill: '#10b981' },
+    { name: 'Sales Revenue', amount: Number(purchaseVsSales.salesRevenueTotal || 0), fill: '#6366f1' }
+  ] : [];
+
+  const fastMovingChartData = (fastMoving || []).slice(0, 6).map((item) => ({
+    name: item.productName?.length > 14 ? `${item.productName.substring(0, 12)}...` : item.productName,
+    fullName: item.productName,
+    unitsSold: Number(item.unitsSold || 0),
+    revenue: Number(item.totalRevenue || 0)
+  }));
+
+  const velocityDistributionData = [
+    { name: 'Fast Moving (Top Sellers)', value: (fastMoving || []).length, color: '#10b981' },
+    { name: 'Slow Moving / Stagnant', value: (slowMoving || []).length, color: '#f59e0b' }
+  ].filter((d) => d.value > 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '3rem' }}>
@@ -367,9 +408,61 @@ export default function SmartInsightsPage() {
                 {Number(purchaseVsSales.soldUnits).toLocaleString()} units
               </div>
               <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                Revenue: ${Number(purchaseVsSales.salesRevenueTotal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                Revenue: ₹{Number(purchaseVsSales.salesRevenueTotal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
+          </div>
+
+          {/* Purchase vs Sales Charts Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
+            <ChartCard
+              title="Stock Flow Units (Inflow vs Outflow)"
+              subtitle="Comparing received procurement units vs sold units"
+              icon={Package}
+              iconColor="#10b981"
+            >
+              <ResponsiveContainer width="100%" height={210}>
+                <BarChart data={purchaseVsSalesUnitsData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip content={<CustomTooltip valueSuffix=" units" />} />
+                  <Bar dataKey="units" radius={[6, 6, 0, 0]}>
+                    {purchaseVsSalesUnitsData.map((entry, index) => (
+                      <Cell key={`cell-units-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <ChartCard
+              title="Commercial Capital Flow"
+              subtitle="Comparing purchase procurement spend vs sales revenue"
+              icon={IndianRupee}
+              iconColor="#6366f1"
+            >
+              <ResponsiveContainer width="100%" height={210}>
+                <BarChart data={purchaseVsSalesFinanceData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
+                  />
+                  <Tooltip
+                    content={
+                      <CustomTooltip
+                        formatter={(val) => `₹${Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                      />
+                    }
+                  />
+                  <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
+                    {purchaseVsSalesFinanceData.map((entry, index) => (
+                      <Cell key={`cell-finance-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
           </div>
         </div>
       )}
@@ -449,6 +542,64 @@ export default function SmartInsightsPage() {
           {/* Velocity Tab */}
           {activeTab === 'velocity' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.5rem' }}>
+              {/* Velocity Intelligence Visual Charts */}
+              <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.25rem' }}>
+                <ChartCard
+                  title="Fast-Moving Demand Leaderboard"
+                  subtitle="Units sold per top performing SKU"
+                  icon={TrendingUp}
+                  iconColor="#10b981"
+                >
+                  {fastMovingChartData.length === 0 ? (
+                    <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                      No sales volume recorded in selected window
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={fastMovingChartData} margin={{ top: 10, right: 10, left: 10, bottom: 25 }}>
+                        <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <Tooltip content={<CustomTooltip valueSuffix=" units sold" />} />
+                        <Bar dataKey="unitsSold" fill="#10b981" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartCard>
+
+                <ChartCard
+                  title="Catalog Velocity Distribution"
+                  subtitle="Composition of active top sellers vs slow-moving items"
+                  icon={PieChartIcon}
+                  iconColor="#6366f1"
+                >
+                  {velocityDistributionData.length === 0 ? (
+                    <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                      No classified movement data in period
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart>
+                        <Tooltip content={<CustomTooltip valueSuffix=" items" />} />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                        <Pie
+                          data={velocityDistributionData}
+                          cx="50%"
+                          cy="45%"
+                          innerRadius={50}
+                          outerRadius={75}
+                          paddingAngle={4}
+                          dataKey="value"
+                        >
+                          {velocityDistributionData.map((entry, index) => (
+                            <Cell key={`cell-vel-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartCard>
+              </div>
+
               {/* Fast-Moving Products */}
               <div style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '0.75rem', padding: '1.25rem' }}>
                 <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 600, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

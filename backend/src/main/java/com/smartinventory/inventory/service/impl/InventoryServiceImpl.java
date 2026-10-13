@@ -13,6 +13,7 @@ import com.smartinventory.product.entity.Product;
 import com.smartinventory.product.repository.ProductRepository;
 import com.smartinventory.user.entity.User;
 import com.smartinventory.user.repository.UserRepository;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,22 @@ public class InventoryServiceImpl implements InventoryService {
     private final InventoryTransactionRepository inventoryTransactionRepository;
     private final StockAdjustmentRepository stockAdjustmentRepository;
     private final UserRepository userRepository;
+    private final CurrentCompanyProvider currentCompanyProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public InventoryServiceImpl(
+            ProductRepository productRepository,
+            InventoryTransactionRepository inventoryTransactionRepository,
+            StockAdjustmentRepository stockAdjustmentRepository,
+            UserRepository userRepository,
+            CurrentCompanyProvider currentCompanyProvider
+    ) {
+        this.productRepository = productRepository;
+        this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this.stockAdjustmentRepository = stockAdjustmentRepository;
+        this.userRepository = userRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
 
     public InventoryServiceImpl(
             ProductRepository productRepository,
@@ -35,10 +52,7 @@ public class InventoryServiceImpl implements InventoryService {
             StockAdjustmentRepository stockAdjustmentRepository,
             UserRepository userRepository
     ) {
-        this.productRepository = productRepository;
-        this.inventoryTransactionRepository = inventoryTransactionRepository;
-        this.stockAdjustmentRepository = stockAdjustmentRepository;
-        this.userRepository = userRepository;
+        this(productRepository, inventoryTransactionRepository, stockAdjustmentRepository, userRepository, null);
     }
 
     @Override
@@ -49,20 +63,40 @@ public class InventoryServiceImpl implements InventoryService {
             String search,
             Pageable pageable
     ) {
-        Page<Product> page = productRepository.searchInventoryReport(categoryId, status, search, pageable);
+        Page<Product> page = (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null)
+                ? productRepository.searchInventoryReport(currentCompanyProvider.getCurrentCompanyId(), categoryId, status, search, pageable)
+                : productRepository.searchInventoryReport(categoryId, status, search, pageable);
         return PageResponseDto.fromPage(page, this::mapToStockItemDto);
     }
 
     @Override
     @Transactional(readOnly = true)
     public InventorySummaryDto getInventorySummary() {
-        long totalProducts = productRepository.countTotalProducts();
-        long totalStockUnits = productRepository.sumTotalStockUnits();
-        long outOfStockCount = productRepository.countOutOfStock();
-        long lowStockCount = productRepository.countLowStock();
-        long reorderRequiredCount = productRepository.countReorderRequired();
+        long totalProducts;
+        long totalStockUnits;
+        long outOfStockCount;
+        long lowStockCount;
+        long reorderRequiredCount;
+        BigDecimal totalRetailValue;
+
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            Long companyId = currentCompanyProvider.getCurrentCompanyId();
+            totalProducts = productRepository.countTotalProducts(companyId);
+            totalStockUnits = productRepository.sumTotalStockUnits(companyId);
+            outOfStockCount = productRepository.countOutOfStock(companyId);
+            lowStockCount = productRepository.countLowStock(companyId);
+            reorderRequiredCount = productRepository.countReorderRequired(companyId);
+            totalRetailValue = productRepository.sumTotalRetailValue(companyId);
+        } else {
+            totalProducts = productRepository.countTotalProducts();
+            totalStockUnits = productRepository.sumTotalStockUnits();
+            outOfStockCount = productRepository.countOutOfStock();
+            lowStockCount = productRepository.countLowStock();
+            reorderRequiredCount = productRepository.countReorderRequired();
+            totalRetailValue = productRepository.sumTotalRetailValue();
+        }
+
         long inStockCount = Math.max(0, totalProducts - reorderRequiredCount);
-        BigDecimal totalRetailValue = productRepository.sumTotalRetailValue();
         if (totalRetailValue == null) {
             totalRetailValue = BigDecimal.ZERO;
         }
@@ -86,7 +120,9 @@ public class InventoryServiceImpl implements InventoryService {
             String search,
             Pageable pageable
     ) {
-        Page<InventoryTransaction> page = inventoryTransactionRepository.searchTransactions(productId, transactionType, search, pageable);
+        Page<InventoryTransaction> page = (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null)
+                ? inventoryTransactionRepository.searchTransactions(currentCompanyProvider.getCurrentCompanyId(), productId, transactionType, search, pageable)
+                : inventoryTransactionRepository.searchTransactions(productId, transactionType, search, pageable);
         return PageResponseDto.fromPage(page, this::mapToTransactionDto);
     }
 
@@ -100,9 +136,12 @@ public class InventoryServiceImpl implements InventoryService {
             throw new IllegalArgumentException("Reason for stock adjustment is mandatory");
         }
 
-        // Lock product with pessimistic write lock
-        Product product = productRepository.findByIdWithLock(request.productId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + request.productId()));
+        // Lock product with pessimistic write lock scoped by company if available
+        Product product = (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null)
+                ? productRepository.findByIdAndCompanyIdWithLock(request.productId(), currentCompanyProvider.getCurrentCompanyId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + request.productId()))
+                : productRepository.findByIdWithLock(request.productId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + request.productId()));
 
         int before = product.getQuantity();
         int after = before + request.quantityDelta();
@@ -120,6 +159,9 @@ public class InventoryServiceImpl implements InventoryService {
 
         // 1. Create StockAdjustment audit record
         StockAdjustment adjustment = new StockAdjustment();
+        if (currentCompanyProvider != null) {
+            adjustment.setCompany(currentCompanyProvider.getCurrentCompany());
+        }
         adjustment.setProduct(product);
         adjustment.setQuantityDelta(request.quantityDelta());
         adjustment.setQuantityBefore(before);
@@ -133,6 +175,9 @@ public class InventoryServiceImpl implements InventoryService {
         String noteText = "Reason: " + adjustment.getReason()
                 + (adjustment.getNotes() != null && !adjustment.getNotes().isEmpty() ? " • " + adjustment.getNotes() : "");
         InventoryTransaction tx = new InventoryTransaction();
+        if (currentCompanyProvider != null) {
+            tx.setCompany(currentCompanyProvider.getCurrentCompany());
+        }
         tx.setProduct(product);
         tx.setTransactionType(InventoryTransactionType.MANUAL_ADJUSTMENT);
         tx.setQuantityDelta(request.quantityDelta());
@@ -154,7 +199,9 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional(readOnly = true)
     public PageResponseDto<StockAdjustmentResponseDto> getAdjustments(Long productId, Pageable pageable) {
-        Page<StockAdjustment> page = stockAdjustmentRepository.findByProductIdOptional(productId, pageable);
+        Page<StockAdjustment> page = (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null)
+                ? stockAdjustmentRepository.findByProductIdOptional(currentCompanyProvider.getCurrentCompanyId(), productId, pageable)
+                : stockAdjustmentRepository.findByProductIdOptional(productId, pageable);
         return PageResponseDto.fromPage(page, this::mapToAdjustmentResponseDto);
     }
 

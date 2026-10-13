@@ -9,6 +9,7 @@ import com.smartinventory.purchase.repository.PurchaseOrderItemRepository;
 import com.smartinventory.sale.repository.SalesOrderItemRepository;
 import com.smartinventory.sale.repository.projection.FastMovingProductProjection;
 import com.smartinventory.sale.repository.projection.ProductSalesPeriodProjection;
+import com.smartinventory.company.service.CurrentCompanyProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,25 +31,54 @@ public class InsightServiceImpl implements InsightService {
     private final ProductRepository productRepository;
     private final SalesOrderItemRepository salesOrderItemRepository;
     private final PurchaseOrderItemRepository purchaseOrderItemRepository;
+    private final CurrentCompanyProvider currentCompanyProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public InsightServiceImpl(
+            ProductRepository productRepository,
+            SalesOrderItemRepository salesOrderItemRepository,
+            PurchaseOrderItemRepository purchaseOrderItemRepository,
+            CurrentCompanyProvider currentCompanyProvider
+    ) {
+        this.productRepository = productRepository;
+        this.salesOrderItemRepository = salesOrderItemRepository;
+        this.purchaseOrderItemRepository = purchaseOrderItemRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
 
     public InsightServiceImpl(
             ProductRepository productRepository,
             SalesOrderItemRepository salesOrderItemRepository,
             PurchaseOrderItemRepository purchaseOrderItemRepository
     ) {
-        this.productRepository = productRepository;
-        this.salesOrderItemRepository = salesOrderItemRepository;
-        this.purchaseOrderItemRepository = purchaseOrderItemRepository;
+        this(productRepository, salesOrderItemRepository, purchaseOrderItemRepository, null);
     }
 
     @Override
     public InventoryOverviewDto getInventoryOverview() {
-        long totalProducts = productRepository.countTotalProducts();
-        long totalStockUnits = productRepository.sumTotalStockUnits();
-        long outOfStock = productRepository.countOutOfStock();
-        long lowStock = productRepository.countLowStock();
-        long reorderRequired = productRepository.countReorderRequired();
-        BigDecimal totalRetailValue = productRepository.sumTotalRetailValue();
+        long totalProducts;
+        long totalStockUnits;
+        long outOfStock;
+        long lowStock;
+        long reorderRequired;
+        BigDecimal totalRetailValue;
+
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            Long companyId = currentCompanyProvider.getCurrentCompanyId();
+            totalProducts = productRepository.countTotalProducts(companyId);
+            totalStockUnits = productRepository.sumTotalStockUnits(companyId);
+            outOfStock = productRepository.countOutOfStock(companyId);
+            lowStock = productRepository.countLowStock(companyId);
+            reorderRequired = productRepository.countReorderRequired(companyId);
+            totalRetailValue = productRepository.sumTotalRetailValue(companyId);
+        } else {
+            totalProducts = productRepository.countTotalProducts();
+            totalStockUnits = productRepository.sumTotalStockUnits();
+            outOfStock = productRepository.countOutOfStock();
+            lowStock = productRepository.countLowStock();
+            reorderRequired = productRepository.countReorderRequired();
+            totalRetailValue = productRepository.sumTotalRetailValue();
+        }
 
         String valuationExplanation = "Reliable unit cost field is not maintained in product catalog; valuation based on purchase cost is unavailable.";
 
@@ -69,11 +99,21 @@ public class InsightServiceImpl implements InsightService {
         DateRange range = resolveDateRange(startDate, endDate, days);
         int safeLimit = Math.min(Math.max(1, limit), 100);
 
-        List<FastMovingProductProjection> projections = salesOrderItemRepository.findFastMovingProducts(
-                range.startInstant(),
-                range.endInstant(),
-                PageRequest.of(0, safeLimit)
-        );
+        List<FastMovingProductProjection> projections;
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            projections = salesOrderItemRepository.findFastMovingProducts(
+                    currentCompanyProvider.getCurrentCompanyId(),
+                    range.startInstant(),
+                    range.endInstant(),
+                    PageRequest.of(0, safeLimit)
+            );
+        } else {
+            projections = salesOrderItemRepository.findFastMovingProducts(
+                    range.startInstant(),
+                    range.endInstant(),
+                    PageRequest.of(0, safeLimit)
+            );
+        }
 
         List<FastMovingProductDto> result = new ArrayList<>();
         for (FastMovingProductProjection p : projections) {
@@ -96,11 +136,21 @@ public class InsightServiceImpl implements InsightService {
         DateRange range = resolveDateRange(startDate, endDate, days);
         int safeLimit = Math.min(Math.max(1, limit), 100);
 
-        List<ProductSalesPeriodProjection> projections = salesOrderItemRepository.findSlowMovingProducts(
-                range.startInstant(),
-                range.endInstant(),
-                PageRequest.of(0, safeLimit)
-        );
+        List<ProductSalesPeriodProjection> projections;
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            projections = salesOrderItemRepository.findSlowMovingProducts(
+                    currentCompanyProvider.getCurrentCompanyId(),
+                    range.startInstant(),
+                    range.endInstant(),
+                    PageRequest.of(0, safeLimit)
+            );
+        } else {
+            projections = salesOrderItemRepository.findSlowMovingProducts(
+                    range.startInstant(),
+                    range.endInstant(),
+                    PageRequest.of(0, safeLimit)
+            );
+        }
 
         List<SlowMovingProductDto> result = new ArrayList<>();
         for (ProductSalesPeriodProjection p : projections) {
@@ -140,9 +190,20 @@ public class InsightServiceImpl implements InsightService {
 
     @Override
     public StockValuationDto getStockValuation(Pageable pageable) {
-        long totalStockUnits = productRepository.sumTotalStockUnits();
-        BigDecimal totalRetailValue = productRepository.sumTotalRetailValue();
-        Page<Product> page = productRepository.findAll(pageable);
+        long totalStockUnits;
+        BigDecimal totalRetailValue;
+        Page<Product> page;
+
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            Long companyId = currentCompanyProvider.getCurrentCompanyId();
+            totalStockUnits = productRepository.sumTotalStockUnits(companyId);
+            totalRetailValue = productRepository.sumTotalRetailValue(companyId);
+            page = productRepository.findAllByCompanyId(companyId, pageable);
+        } else {
+            totalStockUnits = productRepository.sumTotalStockUnits();
+            totalRetailValue = productRepository.sumTotalRetailValue();
+            page = productRepository.findAll(pageable);
+        }
 
         PageResponseDto<ProductValuationItemDto> pageDto = PageResponseDto.fromPage(page, p -> {
             BigDecimal unitPrice = p.getPrice() != null ? p.getPrice() : BigDecimal.ZERO;
@@ -175,11 +236,23 @@ public class InsightServiceImpl implements InsightService {
     public PurchaseVsSalesDto getPurchaseVsSales(LocalDate startDate, LocalDate endDate, Integer days) {
         DateRange range = resolveDateRange(startDate, endDate, days);
 
-        Long purchasedUnits = purchaseOrderItemRepository.sumReceivedPurchaseUnits(range.startInstant(), range.endInstant());
-        BigDecimal purchaseCostTotal = purchaseOrderItemRepository.sumReceivedPurchaseCost(range.startInstant(), range.endInstant());
+        Long purchasedUnits;
+        BigDecimal purchaseCostTotal;
+        Long soldUnits;
+        BigDecimal salesRevenueTotal;
 
-        Long soldUnits = salesOrderItemRepository.sumCompletedSalesUnits(range.startInstant(), range.endInstant());
-        BigDecimal salesRevenueTotal = salesOrderItemRepository.sumCompletedSalesRevenue(range.startInstant(), range.endInstant());
+        if (currentCompanyProvider != null && currentCompanyProvider.getCurrentCompanyId() != null) {
+            Long companyId = currentCompanyProvider.getCurrentCompanyId();
+            purchasedUnits = purchaseOrderItemRepository.sumReceivedPurchaseUnits(companyId, range.startInstant(), range.endInstant());
+            purchaseCostTotal = purchaseOrderItemRepository.sumReceivedPurchaseCost(companyId, range.startInstant(), range.endInstant());
+            soldUnits = salesOrderItemRepository.sumCompletedSalesUnits(companyId, range.startInstant(), range.endInstant());
+            salesRevenueTotal = salesOrderItemRepository.sumCompletedSalesRevenue(companyId, range.startInstant(), range.endInstant());
+        } else {
+            purchasedUnits = purchaseOrderItemRepository.sumReceivedPurchaseUnits(range.startInstant(), range.endInstant());
+            purchaseCostTotal = purchaseOrderItemRepository.sumReceivedPurchaseCost(range.startInstant(), range.endInstant());
+            soldUnits = salesOrderItemRepository.sumCompletedSalesUnits(range.startInstant(), range.endInstant());
+            salesRevenueTotal = salesOrderItemRepository.sumCompletedSalesRevenue(range.startInstant(), range.endInstant());
+        }
 
         long pUnits = purchasedUnits != null ? purchasedUnits : 0L;
         long sUnits = soldUnits != null ? soldUnits : 0L;

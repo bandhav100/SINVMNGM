@@ -23,11 +23,28 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   BarChart3,
+  BarChart2,
+  PieChart as PieChartIcon,
+  Activity,
   Calendar,
   Sparkles,
   ShieldCheck,
   Building
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend
+} from 'recharts';
+import ChartCard from '../../components/charts/ChartCard';
+import CustomTooltip from '../../components/charts/CustomTooltip';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -88,6 +105,26 @@ export default function DashboardPage() {
   const role = user?.role || '';
   const canAccessPurchases = role === 'ADMIN' || role === 'INVENTORY_MANAGER' || role === 'PURCHASE_MANAGER';
   const canAccessSales = role === 'ADMIN' || role === 'SALES_STAFF';
+
+  // Visual Analytics Datasets
+  const healthyCount = Math.max(0, (summary?.totalProducts || 0) - (summary?.lowStockCount || 0) - (summary?.outOfStockCount || 0));
+  const stockHealthData = [
+    { name: 'Healthy Stock', value: healthyCount, color: '#10b981' },
+    { name: 'Low Stock', value: Number(summary?.lowStockCount || 0), color: '#f59e0b' },
+    { name: 'Out of Stock', value: Number(summary?.outOfStockCount || 0), color: '#ef4444' }
+  ].filter(item => item.value > 0);
+
+  const salesPipelineData = [
+    { name: 'Completed Orders', value: Number(summary?.completedSalesCount || 0), color: '#10b981' },
+    { name: 'Draft Orders', value: Number(summary?.draftSalesCount || 0), color: '#3b82f6' },
+    { name: 'Cancelled Orders', value: Number(summary?.cancelledSalesCount || 0), color: '#94a3b8' }
+  ];
+
+  const commercialComparisonData = [
+    { name: 'Sales Revenue', amount: Number(summary?.completedSalesRevenue || 0), fill: '#10b981' },
+    ...(summary?.purchaseMetricsVisible ? [{ name: 'Procurement Cost', amount: Number(summary?.receivedPurchasesTotalCost || 0), fill: '#8b5cf6' }] : []),
+    { name: 'Retail Valuation', amount: Number(summary?.potentialRetailValuation || 0), fill: '#3b82f6' }
+  ];
 
   if (loading && !summary) {
     return (
@@ -288,6 +325,121 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Visual Analytics & Charts Section */}
+      <div style={{ marginBottom: '1.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BarChart2 size={20} color="var(--color-primary)" />
+            <h2 style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--color-text-primary)', margin: 0 }}>
+              Visual Intelligence & Overview
+            </h2>
+          </div>
+          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+            Real-time interactive distribution charts & pipeline breakdown
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.25rem' }}>
+          {/* Chart 1: Stock Health Distribution */}
+          <ChartCard
+            title="Catalog Stock Health"
+            subtitle={`${summary?.totalProducts || 0} Total Products • ${summary?.totalStockUnits || 0} Units`}
+            icon={PieChartIcon}
+            iconColor="#10b981"
+          >
+            {stockHealthData.length === 0 ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+                No catalog items recorded yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Tooltip content={<CustomTooltip valueSuffix=" products" />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  <Pie
+                    data={stockHealthData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {stockHealthData.map((entry, index) => (
+                      <Cell key={`cell-health-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          {/* Chart 2: Sales Pipeline Distribution */}
+          <ChartCard
+            title="Sales Pipeline Distribution"
+            subtitle={`${(summary?.completedSalesCount || 0) + (summary?.draftSalesCount || 0) + (summary?.cancelledSalesCount || 0)} Total Sales Records`}
+            icon={TrendingUp}
+            iconColor="#3b82f6"
+          >
+            {salesPipelineData.every(d => d.value === 0) ? (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+                No sales order history recorded yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Tooltip content={<CustomTooltip valueSuffix=" orders" />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  <Pie
+                    data={salesPipelineData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {salesPipelineData.map((entry, index) => (
+                      <Cell key={`cell-sales-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          {/* Chart 3: Financial & Commercial Overview */}
+          <ChartCard
+            title="Financial & Inventory Volume"
+            subtitle="Comparing sales revenue, procurement spend & retail valuation"
+            icon={BarChart3}
+            iconColor="#8b5cf6"
+          >
+            <ResponsiveContainer width="100%" height={230}>
+              <BarChart data={commercialComparisonData} margin={{ top: 10, right: 10, left: 10, bottom: 25 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--color-text-secondary)' }} interval={0} />
+                <YAxis
+                  tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+                  tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
+                />
+                <Tooltip
+                  content={
+                    <CustomTooltip
+                      formatter={(val) => formatCurrency(val)}
+                    />
+                  }
+                />
+                <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
+                  {commercialComparisonData.map((entry, index) => (
+                    <Cell key={`cell-comm-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
       </div>
 
       {/* Main Grid: Critical Alerts Radar (Left) + Operations Feed (Right) */}

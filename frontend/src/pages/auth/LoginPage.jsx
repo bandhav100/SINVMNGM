@@ -154,7 +154,25 @@ export default function LoginPage() {
         </form>
 
         <div style={{
-          marginTop: '2rem',
+          marginTop: '1.25rem',
+          textAlign: 'center',
+          fontSize: '0.875rem'
+        }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Need a new company workspace? </span>
+          <Link
+            to="/create-inventory"
+            style={{
+              color: 'var(--primary-color, #2563eb)',
+              fontWeight: '600',
+              textDecoration: 'none'
+            }}
+          >
+            Register Company
+          </Link>
+        </div>
+
+        <div style={{
+          marginTop: '1.5rem',
           paddingTop: '1.25rem',
           borderTop: '1px solid var(--border-color, #f1f5f9)',
           textAlign: 'center',

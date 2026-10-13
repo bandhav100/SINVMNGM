@@ -1,5 +1,6 @@
 package com.smartinventory.sale.entity;
 
+import com.smartinventory.company.entity.Company;
 import com.smartinventory.sale.model.SalesOrderStatus;
 import com.smartinventory.user.entity.User;
 import jakarta.persistence.*;
@@ -17,7 +18,11 @@ public class SalesOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_number", nullable = false, unique = true, length = 50)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
+    @Column(name = "order_number", nullable = false, length = 50)
     private String orderNumber;
 
     @Enumerated(EnumType.STRING)
@@ -70,6 +75,11 @@ public class SalesOrder {
         if (this.totalAmount == null) {
             this.totalAmount = BigDecimal.ZERO;
         }
+        if (this.company == null) {
+            Company defComp = new Company();
+            defComp.setId(1L);
+            this.company = defComp;
+        }
     }
 
     @PreUpdate
@@ -101,6 +111,14 @@ public class SalesOrder {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public String getOrderNumber() {

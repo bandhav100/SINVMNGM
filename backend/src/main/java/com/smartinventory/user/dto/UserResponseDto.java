@@ -13,9 +13,17 @@ public record UserResponseDto(
         Role role,
         boolean active,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Long companyId,
+        String companyName
 ) {
+    public UserResponseDto(Long id, String username, String email, String fullName, Role role, boolean active, Instant createdAt, Instant updatedAt) {
+        this(id, username, email, fullName, role, active, createdAt, updatedAt, 1L, "Smart Inventory Systems");
+    }
+
     public static UserResponseDto fromEntity(User user) {
+        Long companyId = (user.getCompany() != null) ? user.getCompany().getId() : 1L;
+        String companyName = (user.getCompany() != null) ? user.getCompany().getName() : "Smart Inventory Systems";
         return new UserResponseDto(
                 user.getId(),
                 user.getUsername(),
@@ -24,7 +32,9 @@ public record UserResponseDto(
                 user.getRole(),
                 user.isActive(),
                 user.getCreatedAt(),
-                user.getUpdatedAt()
+                user.getUpdatedAt(),
+                companyId,
+                companyName
         );
     }
 }

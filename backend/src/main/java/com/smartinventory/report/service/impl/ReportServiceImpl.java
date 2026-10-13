@@ -43,6 +43,26 @@ public class ReportServiceImpl implements ReportService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseOrderItemRepository purchaseOrderItemRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
+    private final com.smartinventory.company.service.CurrentCompanyProvider currentCompanyProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ReportServiceImpl(
+            ProductRepository productRepository,
+            SalesOrderRepository salesOrderRepository,
+            SalesOrderItemRepository salesOrderItemRepository,
+            PurchaseOrderRepository purchaseOrderRepository,
+            PurchaseOrderItemRepository purchaseOrderItemRepository,
+            InventoryTransactionRepository inventoryTransactionRepository,
+            com.smartinventory.company.service.CurrentCompanyProvider currentCompanyProvider
+    ) {
+        this.productRepository = productRepository;
+        this.salesOrderRepository = salesOrderRepository;
+        this.salesOrderItemRepository = salesOrderItemRepository;
+        this.purchaseOrderRepository = purchaseOrderRepository;
+        this.purchaseOrderItemRepository = purchaseOrderItemRepository;
+        this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this.currentCompanyProvider = currentCompanyProvider;
+    }
 
     public ReportServiceImpl(
             ProductRepository productRepository,
@@ -52,12 +72,7 @@ public class ReportServiceImpl implements ReportService {
             PurchaseOrderItemRepository purchaseOrderItemRepository,
             InventoryTransactionRepository inventoryTransactionRepository
     ) {
-        this.productRepository = productRepository;
-        this.salesOrderRepository = salesOrderRepository;
-        this.salesOrderItemRepository = salesOrderItemRepository;
-        this.purchaseOrderRepository = purchaseOrderRepository;
-        this.purchaseOrderItemRepository = purchaseOrderItemRepository;
-        this.inventoryTransactionRepository = inventoryTransactionRepository;
+        this(productRepository, salesOrderRepository, salesOrderItemRepository, purchaseOrderRepository, purchaseOrderItemRepository, inventoryTransactionRepository, null);
     }
 
     @Override

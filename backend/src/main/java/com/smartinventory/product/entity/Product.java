@@ -1,6 +1,7 @@
 package com.smartinventory.product.entity;
 
 import com.smartinventory.category.entity.Category;
+import com.smartinventory.company.entity.Company;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -14,10 +15,14 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "sku", nullable = false, unique = true, length = 100)
+    @Column(name = "sku", nullable = false, length = 100)
     private String sku;
 
     @Column(name = "description", columnDefinition = "TEXT")
@@ -55,6 +60,16 @@ public class Product {
         this.reorderLevel = reorderLevel != null ? reorderLevel : 10;
     }
 
+    public Product(Company company, String name, String sku, String description, BigDecimal price, Integer quantity, Integer reorderLevel) {
+        this.company = company;
+        this.name = name;
+        this.sku = sku;
+        this.description = description;
+        this.price = price;
+        this.quantity = quantity != null ? quantity : 0;
+        this.reorderLevel = reorderLevel != null ? reorderLevel : 10;
+    }
+
     @PrePersist
     protected void onCreate() {
         Instant now = Instant.now();
@@ -70,6 +85,11 @@ public class Product {
         if (this.reorderLevel == null) {
             this.reorderLevel = 10;
         }
+        if (this.company == null) {
+            Company defComp = new Company();
+            defComp.setId(1L);
+            this.company = defComp;
+        }
     }
 
     @PreUpdate
@@ -83,6 +103,14 @@ public class Product {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public String getName() {

@@ -1,5 +1,6 @@
 package com.smartinventory.settings.entity;
 
+import com.smartinventory.company.entity.Company;
 import com.smartinventory.user.entity.User;
 import jakarta.persistence.*;
 import java.time.Instant;
@@ -11,6 +12,10 @@ public class SystemSettings {
 
     @Id
     private Long id = 1L;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
     @Column(name = "company_name", nullable = false, length = 100)
     private String companyName;
@@ -59,6 +64,11 @@ public class SystemSettings {
         if (this.id == null) {
             this.id = 1L;
         }
+        if (this.company == null) {
+            Company defComp = new Company();
+            defComp.setId(this.id);
+            this.company = defComp;
+        }
     }
 
     public Long getId() {
@@ -67,6 +77,14 @@ public class SystemSettings {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public String getCompanyName() {

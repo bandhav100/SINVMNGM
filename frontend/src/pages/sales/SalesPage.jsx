@@ -22,8 +22,26 @@ import {
   User,
   ShoppingBag,
   Calendar,
-  X
+  X,
+  PieChart as PieChartIcon,
+  BarChart3,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend
+} from 'recharts';
+import ChartCard from '../../components/charts/ChartCard';
+import CustomTooltip from '../../components/charts/CustomTooltip';
 
 export default function SalesPage() {
   const { user } = useAuth();
@@ -89,12 +107,29 @@ export default function SalesPage() {
     fetchSales();
   }, [fetchSales]);
 
-  // KPI Calculations
+  const [showCharts, setShowCharts] = useState(true);
+
+  // KPI & Analytics Calculations
   const completedSalesCount = sales.filter((s) => s.status === 'COMPLETED').length;
   const draftSalesCount = sales.filter((s) => s.status === 'DRAFT').length;
+  const cancelledSalesCount = sales.filter((s) => s.status === 'CANCELLED').length;
   const completedRevenue = sales
     .filter((s) => s.status === 'COMPLETED')
     .reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+  const draftRevenue = sales
+    .filter((s) => s.status === 'DRAFT')
+    .reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+
+  const statusDistributionData = [
+    { name: 'Completed', value: completedSalesCount, color: '#10b981' },
+    { name: 'Draft', value: draftSalesCount, color: '#f59e0b' },
+    { name: 'Cancelled', value: cancelledSalesCount, color: '#ef4444' }
+  ].filter(d => d.value > 0);
+
+  const salesVolumeData = [
+    { name: 'Completed', amount: completedRevenue, count: completedSalesCount, fill: '#10b981' },
+    { name: 'Draft', amount: draftRevenue, count: draftSalesCount, fill: '#f59e0b' }
+  ];
 
   // Search handler
   const handleSearchSubmit = (e) => {
@@ -247,6 +282,17 @@ export default function SalesPage() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setShowCharts((prev) => !prev)}
+            className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300"
+            title="Toggle Visual Charts"
+          >
+            <PieChartIcon className="w-3.5 h-3.5 text-emerald-600" />
+            {showCharts ? 'Hide Charts' : 'Show Charts'}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchSales}
             disabled={isLoading}
             className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300"
@@ -339,6 +385,73 @@ export default function SalesPage() {
           <span className="text-[11px] text-slate-400">Completed on current page</span>
         </div>
       </div>
+
+      {/* Visual Analytics Charts Section */}
+      {showCharts && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ChartCard
+            title="Sales Status Breakdown"
+            subtitle={`${sales.length} orders shown on current page`}
+            icon={PieChartIcon}
+            iconColor="#10b981"
+          >
+            {statusDistributionData.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                No orders available for chart
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Tooltip content={<CustomTooltip valueSuffix=" orders" />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  <Pie
+                    data={statusDistributionData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {statusDistributionData.map((entry, index) => (
+                      <Cell key={`cell-status-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          <ChartCard
+            title="Order Revenue by Status"
+            subtitle="Comparing completed revenue vs pending draft value"
+            icon={BarChart3}
+            iconColor="#3b82f6"
+          >
+            <ResponsiveContainer width="100%" height={230}>
+              <BarChart data={salesVolumeData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
+                />
+                <Tooltip
+                  content={
+                    <CustomTooltip
+                      formatter={(val) => `₹${Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                    />
+                  }
+                />
+                <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
+                  {salesVolumeData.map((entry, index) => (
+                    <Cell key={`cell-vol-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+      )}
 
       {/* Filter and Search Controls */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs space-y-3">

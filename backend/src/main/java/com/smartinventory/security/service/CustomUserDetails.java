@@ -1,5 +1,6 @@
 package com.smartinventory.security.service;
 
+import com.smartinventory.company.entity.Company;
 import com.smartinventory.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,6 +23,14 @@ public class CustomUserDetails implements UserDetails {
 
     public Long getId() {
         return user.getId();
+    }
+
+    public Company getCompany() {
+        return user.getCompany();
+    }
+
+    public Long getCompanyId() {
+        return user.getCompany() != null ? user.getCompany().getId() : 1L;
     }
 
     public String getFullName() {
