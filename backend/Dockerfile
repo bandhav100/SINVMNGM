@@ -1,21 +1,29 @@
-# Production runtime image for Spring Boot backend
-FROM eclipse-temurin:21-jre-alpine
+
+# Stage 1: Build the Spring Boot application
+FROM maven:3.9-eclipse-temurin-21 AS build
+
 WORKDIR /app
 
-# Security: Create non-root user
+COPY pom.xml .
+COPY src ./src
+
+RUN mvn -B clean package -DskipTests
+
+# Stage 2: Production runtime
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy pre-built application jar
-COPY target/*.jar app.jar
-RUN chown -R appuser:appgroup /app
+COPY --from=build /app/target/*.jar app.jar
+
+RUN chown appuser:appgroup app.jar
 
 USER appuser
 
+ENV JAVA_OPTS="-Xms128m -Xmx384m -XX:+UseG1GC"
+
 EXPOSE 8081
 
-ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
-
-HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1
-
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8081} -jar app.jar"]
