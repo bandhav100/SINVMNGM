@@ -25,36 +25,11 @@ import heroProcess5 from '../../assets/hero-process-5.jpg';
 import '../../styles/landing.css';
 
 const heroSlides = [
-  {
-    step: 'STAGE 01',
-    phase: 'Warehouse Storage & Inbound Intake',
-    label: 'High-Density Pallet Racks & Automated Ground Transport',
-    img: heroProcess1
-  },
-  {
-    step: 'STAGE 02',
-    phase: 'Inventory Auditing & Barcode Tracking',
-    label: 'Digital Handheld Scanning, SKU Audits & Item Verification',
-    img: heroProcess2
-  },
-  {
-    step: 'STAGE 03',
-    phase: 'Automated Fulfillment & Order Picking',
-    label: 'Robotic Conveyor Sorting, Packing Lines & AGV Movement',
-    img: heroProcess3
-  },
-  {
-    step: 'STAGE 04',
-    phase: 'Live Analytics & Operations Intelligence',
-    label: 'Elevated Control Room, Stock Heatmaps & Demand Analytics',
-    img: heroProcess4
-  },
-  {
-    step: 'STAGE 05',
-    phase: 'Depot Dispatch & Supply Chain Logistics',
-    label: 'High-Bay Staging, Fleet Loading & End-to-End Fulfillment',
-    img: heroProcess5
-  }
+  heroProcess1,
+  heroProcess2,
+  heroProcess3,
+  heroProcess4,
+  heroProcess5
 ];
 
 export default function LandingPage() {
@@ -87,11 +62,11 @@ export default function LandingPage() {
       <section className="landing-hero-wrapper" id="home">
         {/* Automatic Multi-Image Background Slideshow */}
         <div className="landing-hero-slideshow" aria-hidden="true">
-          {heroSlides.map((slide, idx) => (
+          {heroSlides.map((imgSrc, idx) => (
             <div
               key={idx}
               className={`landing-hero-slide ${idx === currentSlide ? 'active' : ''}`}
-              style={{ backgroundImage: `url(${slide.img})` }}
+              style={{ backgroundImage: `url(${imgSrc})` }}
             />
           ))}
         </div>
@@ -195,26 +170,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Workflow Process Stage Tracker */}
-          <div className="hero-process-tracker">
-            <div className="hero-process-pill">
-              <span className="process-pill-badge">{heroSlides[currentSlide]?.step}</span>
-              <span className="process-pill-title">{heroSlides[currentSlide]?.phase}</span>
-            </div>
 
-            <div className="hero-slideshow-dots" aria-label="Process workflow indicators">
-              {heroSlides.map((slide, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className={`hero-dot ${idx === currentSlide ? 'active' : ''}`}
-                  onClick={() => setCurrentSlide(idx)}
-                  title={`${slide.step}: ${slide.phase}`}
-                  aria-label={`Jump to ${slide.step}`}
-                />
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
