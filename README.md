@@ -1,240 +1,433 @@
-# Smart Inventory Management System
+# SIMS — Smart Inventory Management System
 
-An enterprise-grade, full-stack Smart Inventory Management System built with **React 18 + Vite**, **Java 21 + Spring Boot 3**, and **PostgreSQL**. Designed for robust inventory tracking, purchase workflows, sales orders, automated stock alerts, business analytics, role-based access control (RBAC), and containerized deployments.
+<p align="center">
+  <img src="https://img.shields.io/badge/SIMS-Smart%20Inventory%20Management-635BFF?style=for-the-badge&logo=databricks&logoColor=white" alt="SIMS"/>
+  <img src="https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21"/>
+  <img src="https://img.shields.io/badge/Spring%20Boot-3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 3"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+</p>
 
----
+<h3 align="center">
+  A Centralized Inventory Management Platform for Modern Businesses
+</h3>
 
-## 1. Architecture & Technology Stack
+<p align="center">
+  Product Management • Stock Tracking • Purchase & Sales Management • Company Workspaces • Role-Based Access Control
+</p>
 
-### System Architecture
-The application follows a clean 3-tier enterprise architecture:
-- **Presentation Layer**: Responsive React 18 single-page application built with Vite, Tailwind CSS, Lucide Icons, and Axios client with HttpOnly cookie + Bearer JWT support.
-- **Application Layer**: Spring Boot 3 REST API in Java 21, featuring stateless JWT authentication with token revocation, database-level locking for concurrency safety, global exception handling, and Flyway database migrations.
-- **Data Persistence Layer**: PostgreSQL relational database with schema-level integrity constraints, indexes, and an immutable inventory transaction ledger.
-
-### Technology Stack
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | React 18, Vite 5, Tailwind CSS, Lucide Icons, Axios |
-| **Backend** | Java 21, Spring Boot 3.3.x, Spring Security, Spring Data JPA / Hibernate |
-| **Database** | PostgreSQL 15+, Flyway Migration Engine |
-| **Testing** | JUnit 5, AssertJ, MockMvc, Karate API Test Framework |
-| **DevOps & Containers** | Docker, Docker Compose, Kubernetes manifests, Jenkins Pipeline |
-
----
-
-## 2. Prerequisites & Supported Versions
-
-Ensure the following tools are installed in your development environment:
-- **Java Development Kit (JDK)**: OpenJDK 21 or Oracle JDK 21
-- **Node.js**: Node.js 18.x or 20.x LTS with `npm` 9.x+
-- **PostgreSQL**: PostgreSQL 15, 16, or compatible Cloud SQL instance
-- **Docker & Docker Compose**: Docker Engine 24.x+ and Docker Compose v2 (optional for local containerization)
-- **Kubernetes CLI (`kubectl`)**: v1.27+ (optional for cluster deployments)
+<p align="center">
+  <a href="https://stockwise-inventory-management-1mx3.onrender.com">
+    <img src="https://img.shields.io/badge/LIVE%20DEMO-Visit%20SIMS-635BFF?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo"/>
+  </a>
+  <a href="https://github.com/bandhav100/StockWise-Inventory-Management">
+    <img src="https://img.shields.io/badge/GITHUB-View%20Repository-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repository"/>
+  </a>
+</p>
 
 ---
 
-## 3. PostgreSQL Database Setup
+## Overview
 
-1. Connect to PostgreSQL via `psql` or pgAdmin:
-   ```bash
-   psql -U postgres
-   ```
-2. Create the application database:
-   ```sql
-   CREATE DATABASE smart_inventory_db;
-   ```
-3. Verify connection credentials (default development user `postgres`).
+**SIMS (Smart Inventory Management System)** is a web-based application designed to simplify inventory operations by providing businesses with a centralized platform to manage products, categories, suppliers, purchases, sales, and stock movements.
 
-Flyway automatically applies database migrations (`V1` through `V7`) on application startup.
+The system enables businesses to maintain organized inventory records, track changes in stock quantities, manage purchase and sales orders, and configure company-specific inventory settings.
+
+SIMS supports separate company workspaces with administrator accounts and role-based access control. Its backend exposes REST APIs, while PostgreSQL stores the application's business data.
+
+The goal is to improve inventory visibility, reduce manual recordkeeping, and make everyday stock management more organized and efficient.
+
+## Live Application
+
+| Component | Link |
+|---|---|
+| SIMS Web Application | [Open Live Demo](https://stockwise-inventory-management-1mx3.onrender.com) |
+| Backend Service | [Open Backend on Render](https://stockwise-inventory-backend.onrender.com) |
+| Source Code | [GitHub Repository](https://github.com/bandhav100/StockWise-Inventory-Management) |
+
+> Deployment note: The live application may occasionally be unavailable during deployment or troubleshooting. Successful deployment does not by itself guarantee that every feature is operational.
 
 ---
 
-## 4. Environment Configuration
+## Technology Stack
 
-Copy `.env.example` to create your local `.env` file:
-```bash
-cp .env.example .env
+<p align="center">
+  <b>Application Stack</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/REACT-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/VITE-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
+  <img src="https://img.shields.io/badge/JAVA%2021-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java"/>
+  <img src="https://img.shields.io/badge/SPRING%20BOOT-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot"/>
+  <img src="https://img.shields.io/badge/SPRING%20SECURITY-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security"/>
+  <img src="https://img.shields.io/badge/POSTGRESQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+  <img src="https://img.shields.io/badge/FLYWAY-CC0200?style=for-the-badge&logo=flyway&logoColor=white" alt="Flyway"/>
+  <img src="https://img.shields.io/badge/MAVEN-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white" alt="Maven"/>
+</p>
+
+<p align="center">
+  <b>Development & Deployment</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/GIT-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git"/>
+  <img src="https://img.shields.io/badge/GITHUB-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/>
+  <img src="https://img.shields.io/badge/RENDER-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render"/>
+  <img src="https://img.shields.io/badge/REST%20API-02569B?style=for-the-badge&logo=fastapi&logoColor=white" alt="REST API"/>
+</p>
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | React | User interface and interactive screens |
+| Frontend tooling | Vite | Development server and frontend build |
+| Backend | Java 21, Spring Boot 3 | Business logic and REST API endpoints |
+| Security | Spring Security | Authentication and authorization |
+| Data access | Spring Data JPA / Hibernate | Database persistence and ORM |
+| Database | PostgreSQL | Persistent business and inventory data |
+| Schema management | Flyway | Versioned database migrations |
+| Build | Maven | Backend dependency management and build |
+| Deployment | Render | Hosting the frontend, backend, and database |
+| Version control | Git and GitHub | Source control and collaboration |
+
+---
+
+## Key Features
+
+### 1. Company Workspace Management
+
+- Register a company and establish its inventory workspace.
+- Associate an administrator account with the company.
+- Maintain company-specific inventory data and settings.
+- Organize business operations within the appropriate company context.
+
+### 2. Authentication and Authorization
+
+- Company registration and administrator account creation.
+- Login using supported username or email credentials.
+- Password hashing for secure password storage.
+- Role-based access control for authorized operations.
+- Active-account status and company association.
+
+### 3. Product Management
+
+- Maintain product information and inventory records.
+- Organize products by category.
+- Associate products with the relevant company.
+- Support inventory operations using product records.
+
+### 4. Category Management
+
+- Maintain product categories.
+- Organize inventory into meaningful groups.
+- Improve product organization and retrieval.
+
+### 5. Supplier Management
+
+- Maintain supplier information.
+- Associate suppliers with purchasing operations.
+- Keep supplier records organized for business use.
+
+### 6. Purchase Order Management
+
+- Create and manage purchase orders.
+- Maintain individual purchase order items.
+- Organize purchasing records for inventory replenishment.
+
+### 7. Sales Order Management
+
+- Maintain sales orders and their associated items.
+- Record sales-related inventory activity.
+- Keep sales operations connected to inventory records.
+
+### 8. Inventory Transactions
+
+- Maintain records of inventory movements.
+- Track stock-related operations.
+- Keep an organized history of inventory transactions.
+
+### 9. Stock Adjustments
+
+- Record inventory corrections.
+- Maintain stock adjustment records.
+- Support inventory reconciliation workflows.
+
+### 10. Company-Specific Settings
+
+The database supports settings such as:
+
+- Default reorder threshold.
+- Low-stock and out-of-stock alerts.
+- Negative-stock policy.
+- Purchase approval requirements.
+- Currency and timezone.
+- Company contact information.
+
+The availability of individual settings in the user interface depends on the implemented application screens.
+
+---
+
+## System Architecture
+
+SIMS follows a frontend–backend–database architecture.
+
+```mermaid
+flowchart TD
+    A[Business User] --> B[React Web Application]
+    B --> C[REST API Requests]
+    C --> D[Spring Boot Backend]
+    D --> E[Spring Security]
+    E --> F[Business Logic and Data Access]
+    F --> G[(PostgreSQL Database)]
+    G --> F
+    F --> D
+    D --> B
 ```
 
-### Key Environment Variables
-| Variable | Description | Default Development Value |
-| :--- | :--- | :--- |
-| `POSTGRES_DB` | Database name | `smart_inventory_db` |
-| `POSTGRES_USER` | Database username | `postgres` |
-| `POSTGRES_PASSWORD` | Database password | *(your password)* |
-| `SPRING_DATASOURCE_URL` | JDBC Connection URL | `jdbc:postgresql://localhost:5432/smart_inventory_db` |
-| `SERVER_PORT` | Spring Boot server port | `8081` |
-| `JWT_SECRET` | Secret key for JWT signing | *(base64 string minimum 256 bits)* |
-| `JWT_EXPIRATION_MS` | Token lifespan | `86400000` (24 hours) |
-| `VITE_API_BASE_URL` | Frontend API URL | `http://localhost:8081/api/v1` |
+### Architecture Components
+
+**Frontend:** Provides the screens used to register companies, authenticate users, and perform inventory operations.
+
+**Backend:** Processes API requests, applies business rules, handles authentication, and communicates with the database.
+
+**Security layer:** Enforces the application's authentication and authorization rules.
+
+**Database:** Stores company records, users, products, suppliers, orders, inventory transactions, and settings.
 
 ---
 
-## 5. Local Startup
+## Database Design
 
-### 5.1 Backend Startup (Spring Boot)
-From the project root:
+The PostgreSQL database contains tables for the following entities:
+
+| Table | Purpose |
+|---|---|
+| `companies` | Company workspace information |
+| `users` | User accounts, roles, and company associations |
+| `products` | Product and inventory information |
+| `categories` | Product categories |
+| `suppliers` | Supplier records |
+| `purchase_orders` | Purchase order headers |
+| `purchase_order_items` | Items belonging to purchase orders |
+| `sales_orders` | Sales order headers |
+| `sales_order_items` | Items belonging to sales orders |
+| `inventory_transactions` | Inventory movement records |
+| `stock_adjustments` | Stock adjustment records |
+| `system_settings` | Company-specific configuration |
+| `flyway_schema_history` | Database migration history |
+
+The exact relationships, constraints, and column definitions are determined by the application's entity mappings and database migrations.
+
+---
+
+## Project Workflow
+
+```mermaid
+flowchart TD
+    A[Open SIMS] --> B{Existing Account?}
+    B -- No --> C[Register Company]
+    C --> D[Create Administrator Account]
+    B -- Yes --> E[Sign In]
+    D --> E
+    E --> F[Authenticate User]
+    F --> G[Access Authorized Workspace]
+    G --> H[Manage Products and Categories]
+    G --> I[Manage Suppliers and Orders]
+    G --> J[Track Inventory Transactions]
+    H --> K[(PostgreSQL)]
+    I --> K
+    J --> K
+```
+
+This illustrates the intended business workflow; individual screens and permissions depend on the implemented application.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+Install the following tools:
+
+- Java Development Kit (JDK) 21.
+- Node.js and npm.
+- PostgreSQL, if running the database locally.
+- Git.
+- Maven, or the Maven Wrapper included with the backend project.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/bandhav100/StockWise-Inventory-Management.git
+cd StockWise-Inventory-Management
+```
+
+### 2. Configure PostgreSQL
+
+Create a PostgreSQL database for local development.
+
+Configure the backend with the appropriate database connection variables:
+
+```properties
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+```
+
+Set these environment variables in your local environment. Use the actual configuration expected by your project.
+
+Never commit real database passwords, API secrets, or authentication tokens to GitHub.
+
+### 3. Start the Backend
+
+Open a terminal in the backend directory:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+On Linux or macOS:
+
 ```bash
 cd backend
-./mvnw clean spring-boot:run
+./mvnw spring-boot:run
 ```
-*(On Windows PowerShell, use `.\mvnw.cmd clean spring-boot:run`)*
 
-The backend server starts on `http://localhost:8081`.
+The backend port is determined by the application's configuration.
 
-### 5.2 Frontend Startup (React + Vite)
-In a separate terminal:
+### 4. Start the Frontend
+
+Open another terminal:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-The frontend development server starts on `http://localhost:5173`.
+Open the local URL printed by Vite.
+
+> The commands above assume the repository contains `backend` and `frontend` directories. Adjust the paths if your repository uses a different layout.
 
 ---
 
-## 6. Initial Administrator Setup & Roles
+## Environment Configuration
 
-The system employs a strict bootstrap workflow for security:
-1. When launched on a fresh database, `GET /api/v1/auth/setup-status` returns `{ "setupRequired": true }`.
-2. The UI automatically presents the **Initial Administrator Setup** form.
-3. Submitting `POST /api/v1/auth/setup-admin` creates the primary `ADMIN` account using PostgreSQL transaction advisory locks to guarantee race safety.
-4. Subsequent setup calls are permanently rejected with HTTP `409 Conflict`. Public registration is disabled.
+The backend may require the following configuration:
 
-### User Roles & Permissions
-- **ADMIN**: Full system access including User Management and System Settings.
-- **INVENTORY_MANAGER**: Stock adjustments, products, categories, stock audits, alerts, and reports.
-- **PURCHASE_MANAGER**: Supplier management, purchase orders creation, receiving, and purchase reports.
-- **SALES_STAFF**: Sales orders creation, customer records, and product availability lookups.
+| Variable | Purpose |
+|---|---|
+| `SPRING_DATASOURCE_URL` | PostgreSQL JDBC connection URL |
+| `SPRING_DATASOURCE_USERNAME` | Database username |
+| `SPRING_DATASOURCE_PASSWORD` | Database password |
+| `SPRING_PROFILES_ACTIVE` | Optional Spring profile, if configured |
+
+Configure the frontend API base URL using the environment variable expected by its codebase. For Vite projects, frontend variables exposed to the browser generally use the `VITE_` prefix.
+
+Example placeholder:
+
+```env
+VITE_API_BASE_URL=https://your-backend-service.example.com/api/v1
+```
+
+Use the actual variable name and API base path expected by your frontend implementation.
 
 ---
 
-## 7. Database Migrations (Flyway)
+## Deployment
 
-Migrations are located in `backend/src/main/resources/db/migration/`:
-- `V1__create_categories_table.sql`: Categories schema and indexes.
-- `V2__create_products_and_suppliers_tables.sql`: Products, suppliers, and relationship constraints.
-- `V3__create_users_and_roles_tables.sql`: Users and role constraint checks.
-- `V4__create_purchase_orders_and_ledger_tables.sql`: Purchase orders, line items, and transaction ledger.
-- `V5__create_sales_orders_table.sql`: Sales orders, line items, and customer references.
-- `V6__create_system_settings_table.sql`: Business and application configuration table.
-- `V7__create_stock_adjustments_table.sql`: Stock adjustment audit log with mandatory reasons.
+The project uses Render for deployment.
 
-To run or verify migrations via Maven:
-```bash
-cd backend
-./mvnw flyway:info
-```
+### Deployment Components
 
----
+1. **Frontend service:** Hosts the React application.
+2. **Backend service:** Hosts the Spring Boot REST API.
+3. **PostgreSQL database:** Stores persistent application data.
 
-## 8. Testing
+### Deployment Checklist
 
-### 8.1 Backend Unit & Integration Tests (JUnit 5)
-```bash
-cd backend
-./mvnw clean test
-```
+- Configure the correct PostgreSQL connection details.
+- Configure environment variables in Render.
+- Ensure the backend builds and starts successfully.
+- Configure CORS to allow the deployed frontend origin.
+- Verify authentication, CSRF, and authorization behavior.
+- Confirm that the frontend points to the correct backend API.
+- Test registration, login, and inventory operations after deployment.
 
-### 8.2 API Integration Tests (Karate Framework)
-Karate tests validate end-to-end REST API flows across authentication, suppliers, products, purchases, sales, inventory adjustments, and settings:
-```bash
-cd tests/karate
-mvn test
-```
+### Deployment URLs
 
-### 8.3 Frontend Tests & Production Build
-```bash
-cd frontend
-npm run build
-```
+- Frontend: https://stockwise-inventory-management-1mx3.onrender.com
+- Backend: https://stockwise-inventory-backend.onrender.com
+
+A successful deployment should be followed by functional testing of the actual application endpoints.
 
 ---
 
-## 9. API Documentation
+## Security Considerations
 
-Interactive OpenAPI/Swagger documentation is available when the backend is running:
-- **Swagger UI**: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
-- **OpenAPI JSON Spec**: [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs)
-
----
-
-## 10. Containerization with Docker & Docker Compose
-
-### 10.1 Running the Full Stack with Docker Compose
-Run the entire platform (PostgreSQL, Backend, and Frontend) with one command:
-```bash
-docker compose up -d --build
-```
-
-### 10.2 Verifying Services
-```bash
-docker compose ps
-docker compose logs -f backend
-```
-
-- **Frontend**: [http://localhost:80](http://localhost:80)
-- **Backend API**: [http://localhost:8081](http://localhost:8081)
-- **PostgreSQL**: Internal container network on port 5432 (data persisted in Docker volume `postgres_data`).
-
-To tear down containers:
-```bash
-docker compose down
-```
+- Store passwords as secure hashes, never plaintext.
+- Keep database credentials in environment variables.
+- Restrict API access according to the application's authorization rules.
+- Configure CORS for explicitly approved frontend origins.
+- Preserve appropriate CSRF protections for the selected authentication mechanism.
+- Never expose database credentials, JWT secrets, or private keys in source control.
+- Validate incoming data and handle errors safely.
+- Ensure that company-specific data is accessible only to appropriately authorized users.
 
 ---
 
-## 11. Kubernetes Deployment
+## Testing and Quality Assurance
 
-Production-ready Kubernetes manifests are provided in the `k8s/` directory:
-- `k8s/namespace.yaml`: Dedicated `smart-inventory` namespace.
-- `k8s/configmap.yaml`: Non-sensitive application configuration.
-- `k8s/secret.yaml`: Database credentials and JWT signing secret placeholders.
-- `k8s/postgres-pvc.yaml` & `k8s/postgres-deployment.yaml`: Persistent volume claim and PostgreSQL service.
-- `k8s/backend-deployment.yaml`: Spring Boot deployment with health/readiness probes and horizontal scaling support.
-- `k8s/frontend-deployment.yaml`: Nginx-served React frontend deployment and ClusterIP service.
-- `k8s/ingress.yaml`: Ingress controller routing for external domain traffic.
+Recommended checks before releasing a new version:
 
-### Deploying to Kubernetes:
-```bash
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/secret.yaml
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/postgres-pvc.yaml
-kubectl apply -f k8s/postgres-deployment.yaml
-kubectl apply -f k8s/backend-deployment.yaml
-kubectl apply -f k8s/frontend-deployment.yaml
-kubectl apply -f k8s/ingress.yaml
-```
+| Area | Example test |
+|---|---|
+| Registration | A valid company registration creates the expected records |
+| Login | Valid credentials authenticate successfully |
+| Authentication | Invalid credentials are rejected |
+| Authorization | Unauthorized users cannot access protected operations |
+| Product management | Product creation and updates persist correctly |
+| Categories | Category operations behave as expected |
+| Suppliers | Supplier records can be managed |
+| Purchasing | Purchase orders and items are stored correctly |
+| Sales | Sales orders and items are stored correctly |
+| Inventory | Stock transactions and adjustments are recorded |
+| Database | Data persists across application restarts |
+| Deployment | Frontend and backend communicate successfully |
 
-Check status:
-```bash
-kubectl get pods -n smart-inventory
-```
+These are recommended test cases, not a claim that every test has already passed.
 
 ---
 
-## 12. Jenkins CI/CD Pipeline
+## Future Enhancements
 
-The declarative `Jenkinsfile` automates the complete CI/CD lifecycle:
-1. **Checkout**: Pulls the target branch.
-2. **Backend Build & JUnit**: Compiles Java 21 code and executes 180+ unit and integration tests.
-3. **API Integration (Karate)**: Spawns the test environment and runs Karate API tests.
-4. **Frontend Build**: Installs dependencies and runs Vite production build.
-5. **Docker Build**: Builds multi-stage container images for frontend and backend.
-6. **Publish & Deploy**: Conditionally pushes container images to the container registry and applies Kubernetes manifests.
+Potential improvements include:
 
-### Required Jenkins Credentials:
-- `DOCKER_REGISTRY_CREDENTIALS`: Username/password or token for container registry.
-- `KUBECONFIG_CREDENTIALS`: Kubeconfig secret file for cluster deployment.
+- Advanced inventory dashboards and analytics.
+- Automated reorder recommendations.
+- Barcode and QR-code scanning.
+- Inventory forecasting and demand analysis.
+- Exportable inventory, sales, and purchase reports.
+- Email or in-app notifications for stock alerts.
+- Expanded audit trails and reporting.
+- Automated CI/CD and integration testing.
 
 ---
 
-## 13. Troubleshooting & Limitations
+## Author
 
-- **Port Conflict (8081 or 5432 in use)**: Adjust `SERVER_PORT` or `POSTGRES_PORT` in your `.env` file.
-- **CORS Errors**: The backend CORS configuration allows `http://localhost:*` and `http://127.0.0.1:*`. For custom domain deployments, configure `CORS_ALLOWED_ORIGINS`.
-- **Sole Administrator Protection**: The system prevents demoting or deactivating the last active administrator to avoid administrative lockouts.
-- **Negative Inventory Prevention**: Direct stock tampering is blocked; all stock mutations must pass through audited transactions (`/api/v1/purchases/*/receive`, `/api/v1/sales`, or `/api/v1/inventory/adjustments`).
+**Bandhav Arugonda**
+
+GitHub: [@bandhav100](https://github.com/bandhav100)
+
+Project: [StockWise-Inventory-Management](https://github.com/bandhav100/StockWise-Inventory-Management)
+
+---
+
+<p align="center">
+  Built to make inventory operations more organized, accessible, and efficient.
+</p>
+
+<p align="center">
+  <b>SIMS — Smart Inventory Management System</b>
+</p>
