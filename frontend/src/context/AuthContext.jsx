@@ -4,7 +4,14 @@ import { authApi } from '../api/authApi';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sims_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [setupRequired, setSetupRequired] = useState(null);
 
@@ -22,8 +29,13 @@ export function AuthProvider({ children }) {
     try {
       const currentUser = await authApi.getCurrentUser();
       setUser(currentUser);
+      if (currentUser) {
+        localStorage.setItem('sims_user', JSON.stringify(currentUser));
+      }
       return currentUser;
     } catch {
+      localStorage.removeItem('sims_token');
+      localStorage.removeItem('sims_user');
       setUser(null);
       return null;
     }
@@ -37,7 +49,13 @@ export function AuthProvider({ children }) {
         await authApi.initCsrf();
         const required = await checkSetupStatus();
         if (!required) {
-          await refreshUser();
+          const token = localStorage.getItem('sims_token');
+          if (token) {
+            await refreshUser();
+          } else {
+            setUser(null);
+            localStorage.removeItem('sims_user');
+          }
         }
       } catch {
         // Initialization failure handled gracefully
@@ -51,6 +69,8 @@ export function AuthProvider({ children }) {
     initAuth();
 
     const handleUnauthorized = () => {
+      localStorage.removeItem('sims_token');
+      localStorage.removeItem('sims_user');
       setUser(null);
     };
 
@@ -65,6 +85,9 @@ export function AuthProvider({ children }) {
     const res = await authApi.login(credentials);
     const loggedInUser = res.user || (await authApi.getCurrentUser());
     setUser(loggedInUser);
+    if (loggedInUser) {
+      localStorage.setItem('sims_user', JSON.stringify(loggedInUser));
+    }
     setSetupRequired(false);
     return loggedInUser;
   };
@@ -73,6 +96,9 @@ export function AuthProvider({ children }) {
     const res = await authApi.setupAdmin(adminData);
     const createdAdmin = res.user || (await authApi.getCurrentUser());
     setUser(createdAdmin);
+    if (createdAdmin) {
+      localStorage.setItem('sims_user', JSON.stringify(createdAdmin));
+    }
     setSetupRequired(false);
     return createdAdmin;
   };
@@ -81,6 +107,9 @@ export function AuthProvider({ children }) {
     const res = await authApi.registerCompany(companyData);
     const createdAdmin = res.user || (await authApi.getCurrentUser());
     setUser(createdAdmin);
+    if (createdAdmin) {
+      localStorage.setItem('sims_user', JSON.stringify(createdAdmin));
+    }
     setSetupRequired(false);
     return createdAdmin;
   };
@@ -91,6 +120,8 @@ export function AuthProvider({ children }) {
     } catch {
       // Clear local user even if network request fails
     } finally {
+      localStorage.removeItem('sims_token');
+      localStorage.removeItem('sims_user');
       setUser(null);
     }
   };

@@ -10,13 +10,41 @@ const apiClient = axios.create({
   xsrfHeaderName: 'X-XSRF-TOKEN',
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'X-Client-Type': 'api'
   }
 });
 
-// Response interceptor for consistent error parsing and 401 handling
+// Request interceptor: attach Authorization Bearer token from localStorage and set X-Client-Type
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('sims_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers['X-Client-Type'] = 'api';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for capturing token, consistent error parsing, and 401 handling
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If response includes an Authorization header, capture token
+    const authHeader = response.headers?.['authorization'] || response.headers?.['Authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      if (token && token !== 'null') {
+        localStorage.setItem('sims_token', token);
+      }
+    }
+    // If response body has token
+    if (response.data?.token) {
+      localStorage.setItem('sims_token', response.data.token);
+    }
+    return response;
+  },
   (error) => {
     let message = 'An unexpected error occurred';
     let validationErrors = null;
@@ -39,8 +67,12 @@ apiClient.interceptors.response.use(
     enhancedError.originalError = error;
 
     if (error.response && error.response.status === 401) {
-      // Notify authentication listeners of session expiration
-      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      if (!isLoginRequest) {
+        localStorage.removeItem('sims_token');
+        localStorage.removeItem('sims_user');
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+      }
     }
 
     return Promise.reject(enhancedError);
@@ -48,3 +80,4 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
+

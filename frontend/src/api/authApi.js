@@ -1,5 +1,19 @@
 import apiClient from './client';
 
+const extractAndStoreToken = (res) => {
+  let token = res.data?.token;
+  if (!token) {
+    const authHeader = res.headers?.['authorization'] || res.headers?.['Authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  if (token && token !== 'null') {
+    localStorage.setItem('sims_token', token);
+  }
+  return token;
+};
+
 export const authApi = {
   getSetupStatus: async () => {
     const res = await apiClient.get('/auth/setup-status');
@@ -16,17 +30,29 @@ export const authApi = {
 
   setupAdmin: async (data) => {
     const res = await apiClient.post('/auth/setup-admin', data);
-    return res.data;
+    const token = extractAndStoreToken(res);
+    return {
+      ...res.data,
+      token: token || res.data?.token
+    };
   },
 
   registerCompany: async (data) => {
     const res = await apiClient.post('/auth/register-company', data);
-    return res.data;
+    const token = extractAndStoreToken(res);
+    return {
+      ...res.data,
+      token: token || res.data?.token
+    };
   },
 
   login: async (credentials) => {
     const res = await apiClient.post('/auth/login', credentials);
-    return res.data;
+    const token = extractAndStoreToken(res);
+    return {
+      ...res.data,
+      token: token || res.data?.token
+    };
   },
 
   getCurrentUser: async () => {
@@ -35,7 +61,13 @@ export const authApi = {
   },
 
   logout: async () => {
-    const res = await apiClient.post('/auth/logout');
-    return res.data;
+    try {
+      const res = await apiClient.post('/auth/logout');
+      return res.data;
+    } finally {
+      localStorage.removeItem('sims_token');
+      localStorage.removeItem('sims_user');
+    }
   }
 };
+
